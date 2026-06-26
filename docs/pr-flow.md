@@ -22,7 +22,7 @@ PR opened/updated
   → Gate + reports  (npm run report) → OPEN_TICKET / CLEAN
   → PR comment       "Flagged N → proved X, discarded Y" + verdict table
   → Evidence artifact uploaded
-  → (optional) UiPath Maestro process started for governed approval + Jira/Slack
+  → (optional) UiPath Maestro process started for governed approval + Slack notify
 ```
 
 ## Why it's diff-scoped (the point)
@@ -68,4 +68,4 @@ Scope the analysis to a real diff with `PENETRON_DIFF_RANGE` (e.g. `origin/main.
 ## Optional UiPath handoff
 Set repo secrets `UIPATH_ORCH_TOKEN`, `UIPATH_ORCH_START_URL`, `UIPATH_RELEASE_KEY`,
 `UIPATH_PROCESS_NAME` to have the Action start the **Penetron Security Gate** Maestro process
-(governed approval → Jira/Slack) after the scan. Without them, the Action just posts the PR comment.
+(governed approval → Slack) after the scan. Without them, the Action just posts the PR comment.

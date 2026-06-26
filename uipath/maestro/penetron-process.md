@@ -28,9 +28,9 @@ it does not itself drive a browser (that is the Penetron MCP via the agent).
    surfaced as links (Exploitable Vulnerabilities, Suggested Improvements).
 6. **Human approval** (User Task → Action Center) — pauses until a human approves the
    external writes. This is the governance checkpoint. (M8e.)
-7. **Fan-out** (Service tasks → API workflows / REST):
-   - Jira: create Bug, assignee = PM, priority = `jiraPriority` (ADF body w/ PoC + evidence).
-   - Slack: post Block Kit summary + links (report · Jira · Test Manager dashboard).
+7. **Notify** (Service task → API workflow / REST):
+   - Slack: post Block Kit summary + links (reports · Test Manager dashboard), priority = `jiraPriority`.
+   - *(v2: automated defect ticketing — e.g. Jira Bug with assignee/priority/PoC — gated behind the same approval.)*
 8. **End event** — full Maestro audit trail retained.
 
 ## Task-type mapping
@@ -40,12 +40,12 @@ it does not itself drive a browser (that is the Penetron MCP via the agent).
 | Layer 2 | Agent task — *Start and wait for agent* (Penetron Coordinator) |
 | Gate | Exclusive gateway (DMN optional) on `decision` |
 | Approval | User Task (Action Center) |
-| Jira / Slack | Service tasks → API workflows (HTTP Request) |
+| Slack notify (Jira ticketing → v2) | Service task → API workflow (HTTP Request) |
 
 ## Governance
-- One mandatory approval before any external write (Jira/Slack).
+- One mandatory approval before any external write (Slack now; defect ticketing in v2).
 - All platform actions under a least-privilege identity (Orchestrator External App).
-- Secrets (Jira token, Slack webhook, MCP bearer) live in Orchestrator Credential Assets.
+- Secrets (Slack webhook, MCP bearer; v2 Jira token) live in Orchestrator Credential Assets.
 
 ## Determinism for the demo
 Pin the demo PR + commit the scenario set; agent runs `mode=replay` at low temperature.
