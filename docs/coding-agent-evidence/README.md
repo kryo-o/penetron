@@ -16,7 +16,7 @@ Agent Builder agent run identical logic.
 ## Role B — build-time platform engineer (the +2 bonus)
 Claude Code built and deployed the project:
 - Scaffolded the repo, the **TS/Playwright exploit engine**, the **exploitability gate**, the two report
-  generators, and the **Jira/Slack** integrations.
+  generators, and the **Slack** integration (plus a Jira ticketing prototype parked for v2).
 - Built the **Remote MCP server** (`pentests/src/mcp/server.ts`, 7 tools, stateful Streamable HTTP, method-scoped
   auth) and the smoke tests.
 - Wired the **Test Manager S2S** sync (`syncVerdicts.ts`) — verified live against tenant `hackathon26_879`,

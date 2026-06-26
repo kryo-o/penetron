@@ -7,7 +7,7 @@
 Penetron shifts security from a late-stage manual checkpoint into a continuous, **governed gate** in the SDLC.
 On a deploy to dev/QA/staging it analyzes the change, **proves exploitability** against the running app,
 reports only the vulnerabilities it actually exploited, syncs red/green evidence to **UiPath Test Manager**,
-and (gated behind a human approval) files a Jira bug and notifies Slack — all orchestrated by **UiPath Maestro**.
+and (gated behind a human approval) notifies Slack — all orchestrated by **UiPath Maestro**. *(Automated defect ticketing, e.g. Jira, is on the [v2 roadmap](#roadmap-v2).)*
 
 Built for the **UiPath AgentHack — Track 3** (agentic software testing with UiPath Test Cloud).
 
@@ -28,7 +28,7 @@ deploy / trigger
      → Exploitability gate  (only exploited == true advances)
      → Two reports  (Exploitable Vulnerabilities · Suggested Improvements)
      → Human approval  (governance checkpoint)
-     → Jira bug (assigned, prioritized) + Slack notification
+     → Slack notification   (automated defect ticketing → v2 roadmap)
 ```
 
 The differentiator is **Layer 2**: a UiPath **Agent Builder** agent calls Penetron's exploit engine over a
@@ -72,7 +72,7 @@ Evidence: [`docs/coding-agent-evidence/`](docs/coding-agent-evidence/).
 | **On-PR trigger (GitHub Action)** | ✅ | `.github/workflows/penetron-pr.yml` → Layer 1 → Layer 2 → PR comment "flagged N → proved X, discarded Y" |
 | Layer 2 exploit runner (TS + Playwright, replay + regenerate) | ✅ | `npm run exploit` (replay) / `npm run exploit:pr` (regenerate) → **6/7 proven, 1 discarded**, schema-valid |
 | Exploitability gate + two reports | ✅ | `npm run report` → `OPEN_TICKET`, priority `Highest` |
-| Jira + Slack integrations | ✅ (dry-run) | valid ADF Bug + Block Kit; live on creds |
+| Slack integration | ✅ LIVE | Block Kit summary posts to the channel on a finding |
 | **Test Manager S2S sync** | ✅ LIVE | tenant `hackathon26_879`, project **PEN**; executions `f689d631…`, `fe3f6e8d…` (6 Failed / 1 Passed) |
 | **Remote MCP server** (7 tools, stateful, dual-auth) | ✅ LIVE | `npm run mcp:http`; agent calls it through a cloudflared tunnel |
 | **Agent Builder coordinator → MCP** | ✅ LIVE | Debug run ~48s → real exploits → TM execution |
@@ -100,7 +100,7 @@ cd target-app && npm run smoke                 # 8 passed, 0 failed
 cd pentests && npm install && npm run pw:install
 npm run exploit      # 6/7 proven exploitable, 1 safe control resists
 npm run report       # exploitability gate -> OPEN_TICKET + two reports
-npm run pipeline     # exploit -> report -> Test Manager sync -> Jira + Slack (dry-run w/o creds)
+npm run pipeline     # exploit -> report -> Test Manager sync -> Slack notify
 ```
 
 ### Run it as it runs on a PR (Layer 1 → Layer 2)
@@ -118,7 +118,7 @@ On GitHub, `.github/workflows/penetron-pr.yml` runs this automatically on any PR
 `target-app/**` and posts the results as a PR comment. See [`docs/pr-flow.md`](docs/pr-flow.md).
 
 Artifacts land in `pentests/evidence/`: `verdicts.json`, `exploitable-vulnerabilities.md`,
-`suggested-improvements.md`, `gate-summary.json`, XSS screenshots + Playwright traces, `jira-payload.json`,
+`suggested-improvements.md`, `gate-summary.json`, XSS screenshots + Playwright traces,
 `slack-message.json`, `tm-sync-result.json`.
 
 ### Run the Remote MCP server (the UiPath bridge)
@@ -145,11 +145,19 @@ penetron/
 └── docs/              # architecture, demo script, coding-agent evidence, integration plan
 ```
 
+## Roadmap (v2)
+
+Out of scope for this submission, planned next:
+- **Automated defect ticketing (Jira)** — open a prioritized bug (assignee, severity, PoC + evidence links) on approval. A working prototype already exists (`pentests/src/integrations/jira.ts` + the `file_jira_ticket` MCP tool); it's parked behind the approval step pending live Jira credentials and is not part of the current demo.
+- **Live `regenerate` Layer 1** via Claude Code on the PR diff (the heuristic analyzer ships today).
+- **Stable named tunnel** + MCP bearer in an Orchestrator Credential Asset.
+- **Deploy webhook + Slack `/pentest`** triggers.
+
 ## Security & scope
 
 - The target app is a **purpose-built test fixture** — the only thing Penetron attacks in the demo.
 - Penetron is for **authorized testing of owned, non-production environments** only.
-- Secrets (MCP bearer, Test Manager client secret, Jira/Slack tokens) are read from env / Orchestrator Assets and
+- Secrets (MCP bearer, Test Manager client secret, Slack webhook) are read from env / Orchestrator Assets and
   are **git-ignored**; never commit `.env`.
 
 ## License

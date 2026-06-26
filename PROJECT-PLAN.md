@@ -5,8 +5,8 @@
 
 ## What & why
 - **Penetron** — an agentic penetration-testing gate. On a deploy to dev/QA/staging it analyzes the change,
-  **proves exploitability** against the running app, reports **only what it actually exploited**, files a Jira
-  bug and notifies Slack — all orchestrated and governed by UiPath.
+  **proves exploitability** against the running app, reports **only what it actually exploited**, and
+  notifies Slack — all orchestrated and governed by UiPath. *(Automated defect ticketing, e.g. Jira, is v2.)*
 - **Event** — UiPath AgentHack **Track 3** (agentic testing with Test Cloud). **Deadline: 2026-06-29.**
 - **Differentiator** — SAST proposes *candidates*; a dynamic agent *proves or discards* each one.
   _"Flagged 7 → proved 6, discarded 1."_
@@ -21,7 +21,7 @@ deploy / Slack trigger
       → Exploitability gate (only exploited == true advances)
       → Two reports (Exploitable Vulns · Suggested Improvements)
       → Human approval (Action Center)
-      → Jira bug (assigned PM, priority) + Slack notification
+      → Slack notification (automated defect ticketing → v2 roadmap)
 ```
 
 ## Status legend
@@ -52,7 +52,7 @@ deploy / Slack trigger
 | M2 | Contract schemas (finding · attack-surface · verdict) | ✅ | `engine/schemas/*`; verdicts validate (ajv 2020-12) |
 | M3 | Layer 2 exploit runner (TS + Playwright, replay) | ✅ | `npm run exploit` → 6/7 proven, 1 discarded; Chromium XSS; screenshots + traces |
 | M4 | Exploitability gate + two reports | ✅ | `npm run report` → gate-summary `OPEN_TICKET`; Report A + Report B |
-| M5 | Jira + Slack integrations | 🟢 | `npm run jira` / `slack` → valid ADF Bug + Block Kit (dry-run); live on creds |
+| M5 | Slack integration (Jira ticketing → v2) | ✅ | `npm run slack` → Block Kit summary posts LIVE to channel. Jira prototype (`npm run jira`, ADF Bug) parked for v2. |
 | M6a | Layer 1 replay output (candidates + attack surface) | ✅ | `engine/replay/candidate-findings.json` |
 | M6b | Layer 1 SAST + change-impact (diff-driven) | ✅ | `pentests/src/layer1/analyze.ts` (`npm run layer1`) — reads the PR diff, emits candidate-findings + attack-surface scoped to the change; feeds Layer 2 regenerate (`npm run exploit:pr`). Verified diff-scoped (1 file changed → 1 candidate). Heuristic rules now; Claude Code can back the same contract. |
 | M11 | Playwright Agent CLI (`@playwright/cli`) wired | 🟡 | skill at `.claude/skills/playwright-cli`; powers regenerate live-drive |
@@ -75,7 +75,7 @@ cd target-app && npm install && npm run build:client && npm start      # http://
 npm run smoke                                                          # 8 passed, 0 failed
 # 3) Penetron Layer 2 + gate + reports + integrations
 cd ../pentests && npm install && npm run pw:install
-npm run pipeline      # exploit (6/7) → reports → Jira + Slack (dry-run)
+npm run pipeline      # exploit (6/7) → reports → Test Manager sync → Slack notify
 ```
 Artifacts land in `pentests/evidence/`: `verdicts.json`, `exploitable-vulnerabilities.md`,
 `suggested-improvements.md`, `gate-summary.json`, XSS screenshots + traces, `jira-payload.json`, `slack-message.json`.
