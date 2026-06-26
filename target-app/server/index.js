@@ -55,7 +55,8 @@ app.post('/api/login', (req, res) => {
 // VULN-SQLI-2: string-concatenated LIKE query -> UNION-based injection. CWE-89.
 app.get('/api/search', (req, res) => {
   const q = req.query.q || '';
-  const sql = `SELECT id, name, category, price FROM products WHERE name LIKE '%${q}%'`;
+  const sort = req.query.sort === 'desc' ? 'DESC' : 'ASC';
+  const sql = `SELECT id, name, category, price FROM products WHERE name LIKE '%${q}%' ORDER BY price ${sort}`;
   try {
     const rows = db.prepare(sql).all();
     res.json({ query: q, results: rows });
