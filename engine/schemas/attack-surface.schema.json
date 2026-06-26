@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://penetron.dev/schemas/attack-surface.schema.json",
+  "title": "Penetron Change Attack-Surface Map",
+  "description": "Layer 1 impact-analysis output. Maps what the PR actually changed to the reachable attack surface, so Layer 2 only attacks the change (saving time). Mirrors the spirit of UiPath Test Cloud Autopilot change-impact analysis, focused on security.",
+  "type": "object",
+  "required": ["schemaVersion", "prRef", "changedFiles", "routes"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "prRef": {
+      "type": "object",
+      "required": ["repo", "base", "head"],
+      "properties": {
+        "repo": { "type": "string" },
+        "base": { "type": "string" },
+        "head": { "type": "string" },
+        "commit": { "type": "string" },
+        "prNumber": { "type": ["integer", "string"] }
+      }
+    },
+    "changedFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "status": { "type": "string", "enum": ["added", "modified", "deleted", "renamed"] },
+          "hunks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["startLine", "endLine"],
+              "properties": {
+                "startLine": { "type": "integer", "minimum": 1 },
+                "endLine": { "type": "integer", "minimum": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "description": "HTTP routes reachable in the app, flagged by whether the PR touched them",
+      "items": {
+        "type": "object",
+        "required": ["method", "path", "touchedByPR"],
+        "additionalProperties": false,
+        "properties": {
+          "method": { "type": "string" },
+          "path": { "type": "string" },
+          "handlerFile": { "type": "string" },
+          "handlerLine": { "type": "integer", "minimum": 1 },
+          "authRequired": { "type": "string", "enum": ["yes", "no", "unknown"] },
+          "touchedByPR": { "type": "boolean" }
+        }
+      }
+    },
+    "dataSinks": {
+      "type": "array",
+      "description": "dangerous sinks where untrusted input may land (sql query, html render, redirect, etc.)",
+      "items": {
+        "type": "object",
+        "required": ["type", "file", "line"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string", "enum": ["sql-query", "html-render", "redirect", "command-exec", "file-path", "deserialize", "other"] },
+          "file": { "type": "string" },
+          "line": { "type": "integer", "minimum": 1 },
+          "taintedFrom": { "type": "string", "description": "where the untrusted input originates" },
+          "touchedByPR": { "type": "boolean" }
+        }
+      }
+    },
+    "authBoundaries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "line", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "file": { "type": "string" },
+          "line": { "type": "integer", "minimum": 1 },
+          "kind": { "type": "string", "enum": ["jwt", "session", "role-check", "ownership-check", "none", "other"] },
+          "touchedByPR": { "type": "boolean" }
+        }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}

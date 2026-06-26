@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+pentests/node_modules
+
+# Builds
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env / secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Playwright
+test-results/
+playwright-report/
+.cache/
+.playwright/
+
+# Penetron run artifacts (regenerated each run)
+pentests/evidence/
+**/*.tmp
+
+# Playwright MCP session captures (page snapshots/screenshots + may contain secrets — never commit)
+.playwright-mcp/
+
+# OS
+.DS_Store
+Thumbs.db
