@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "1.0",
+  "source": "penetron-sast",
+  "generatedAt": "2026-06-20T00:00:00.000Z",
+  "_note": "Committed Layer 1 (SAST + impact) output for the pinned demo PR (replay mode). In regenerate mode this is produced live by Claude Code from the PR diff. Findings 001-006 are exploitable candidates, 007 is a static-only suspicion that Layer 2 disproves (precision), 008-011 are hardening items for the Improvements report.",
+  "prRef": { "repo": "acme/demo-shop", "base": "main", "head": "feature/search-and-orders", "prNumber": 42 },
+  "findings": [
+    {
+      "id": "PNT-SAST-001", "vulnClass": "sqli", "title": "SQL injection in login query",
+      "file": "target-app/server/index.js", "line": 43, "cwe": "CWE-89", "owasp": "A03:2021-Injection",
+      "confidence": "high", "tentativeSeverity": "critical", "inScope": true,
+      "rationale": "username/password concatenated directly into the SQL string.",
+      "exploitHint": { "endpoint": "/api/login", "method": "POST", "parameter": "username", "injectionPoint": "body", "authContext": "anonymous", "payloadIdea": "admin'--" }
+    },
+    {
+      "id": "PNT-SAST-002", "vulnClass": "sqli", "title": "SQL injection in product search",
+      "file": "target-app/server/index.js", "line": 60, "cwe": "CWE-89", "owasp": "A03:2021-Injection",
+      "confidence": "high", "tentativeSeverity": "high", "inScope": true,
+      "rationale": "q is concatenated into a LIKE clause.",
+      "exploitHint": { "endpoint": "/api/search", "method": "GET", "parameter": "q", "injectionPoint": "query", "authContext": "anonymous", "payloadIdea": "' UNION SELECT ...--" }
+    },
+    {
+      "id": "PNT-SAST-003", "vulnClass": "xss-reflected", "title": "Reflected XSS in /welcome",
+      "file": "target-app/server/index.js", "line": 72, "cwe": "CWE-79", "owasp": "A03:2021-Injection",
+      "confidence": "high", "tentativeSeverity": "medium", "inScope": true,
+      "rationale": "name query param echoed unescaped into the HTML response.",
+      "exploitHint": { "endpoint": "/welcome", "method": "GET", "parameter": "name", "injectionPoint": "query", "authContext": "anonymous", "renderSink": "server HTML", "payloadIdea": "<script>...</script>" }
+    },
+    {
+      "id": "PNT-SAST-004", "vulnClass": "xss-stored", "title": "Stored XSS via product reviews",
+      "file": "target-app/client/src/App.jsx", "line": 160, "cwe": "CWE-79", "owasp": "A03:2021-Injection",
+      "confidence": "high", "tentativeSeverity": "high", "inScope": true,
+      "rationale": "comment body rendered via dangerouslySetInnerHTML.",
+      "exploitHint": { "endpoint": "/api/comments", "method": "POST", "parameter": "body", "injectionPoint": "body", "authContext": "anonymous", "renderSink": "React dangerouslySetInnerHTML", "payloadIdea": "<img src=x onerror=...>" }
+    },
+    {
+      "id": "PNT-SAST-005", "vulnClass": "idor", "title": "Missing object-level authorization on orders",
+      "file": "target-app/server/index.js", "line": 97, "cwe": "CWE-639", "owasp": "A01:2021-Broken Access Control",
+      "confidence": "medium", "tentativeSeverity": "high", "inScope": true,
+      "rationale": "order fetched by :id with no ownership check.",
+      "exploitHint": { "endpoint": "/api/orders/:id", "method": "GET", "parameter": "id", "injectionPoint": "path", "authContext": "low-priv-user", "payloadIdea": "request another user's order id" }
+    },
+    {
+      "id": "PNT-SAST-006", "vulnClass": "broken-auth", "title": "JWT signature not verified",
+      "file": "target-app/server/index.js", "line": 29, "cwe": "CWE-287", "owasp": "A07:2021-Auth Failures",
+      "confidence": "high", "tentativeSeverity": "critical", "inScope": true,
+      "rationale": "authMiddleware uses jwt.decode (no signature verification).",
+      "exploitHint": { "endpoint": "/api/admin/users", "method": "GET", "injectionPoint": "header", "authContext": "anonymous", "payloadIdea": "forge unsigned JWT role=admin" }
+    },
+    {
+      "id": "PNT-SAST-007", "vulnClass": "sqli", "title": "Suspected SQL injection on product category filter",
+      "file": "target-app/server/index.js", "line": 124, "cwe": "CWE-89", "owasp": "A03:2021-Injection",
+      "confidence": "low", "tentativeSeverity": "medium", "inScope": true,
+      "rationale": "category query param flows into a DB query — flagged statically; needs dynamic confirmation.",
+      "exploitHint": { "endpoint": "/api/products", "method": "GET", "parameter": "category", "injectionPoint": "query", "authContext": "anonymous", "payloadIdea": "' UNION SELECT ...--" }
+    },
+    {
+      "id": "PNT-SAST-008", "vulnClass": "other", "title": "Passwords stored in plaintext",
+      "file": "target-app/server/db.js", "line": 48, "cwe": "CWE-256",
+      "confidence": "high", "tentativeSeverity": "high", "inScope": true,
+      "rationale": "user passwords are seeded and stored without hashing."
+    },
+    {
+      "id": "PNT-SAST-009", "vulnClass": "other", "title": "Verbose SQL errors returned to clients",
+      "file": "target-app/server/index.js", "line": 51, "cwe": "CWE-209",
+      "confidence": "high", "tentativeSeverity": "low", "inScope": true,
+      "rationale": "error handlers return err.message and the raw SQL to the client."
+    },
+    {
+      "id": "PNT-SAST-010", "vulnClass": "other", "title": "Weak hardcoded JWT secret",
+      "file": "target-app/server/index.js", "line": 17, "cwe": "CWE-798",
+      "confidence": "high", "tentativeSeverity": "medium", "inScope": true,
+      "rationale": "JWT secret 'penetron-demo-secret' is hardcoded in source."
+    },
+    {
+      "id": "PNT-SAST-011", "vulnClass": "other", "title": "Missing security response headers",
+      "file": "target-app/server/index.js", "line": 22, "cwe": "CWE-693",
+      "confidence": "medium", "tentativeSeverity": "low", "inScope": true,
+      "rationale": "no Content-Security-Policy, X-Frame-Options, or HSTS set."
+    }
+  ]
+}

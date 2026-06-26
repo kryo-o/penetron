@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://penetron.dev/schemas/candidate-finding.schema.json",
+  "title": "Penetron Candidate Findings",
+  "description": "Layer 1 (static SAST + impact analysis) output. A list of UNPROVEN candidate vulnerabilities derived from the PR diff. Layer 2 proves or discards each one. Never a final report.",
+  "type": "object",
+  "required": ["schemaVersion", "source", "prRef", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0" },
+    "source": { "type": "string", "const": "penetron-sast" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "prRef": { "$ref": "#/$defs/prRef" },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    }
+  },
+  "$defs": {
+    "prRef": {
+      "type": "object",
+      "required": ["repo", "base", "head"],
+      "additionalProperties": false,
+      "properties": {
+        "repo": { "type": "string" },
+        "base": { "type": "string", "description": "base ref/branch" },
+        "head": { "type": "string", "description": "head ref/branch" },
+        "commit": { "type": "string" },
+        "prNumber": { "type": ["integer", "string"] }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "required": ["id", "vulnClass", "title", "file", "line", "confidence", "inScope"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "stable id, e.g. PNT-SAST-001" },
+        "vulnClass": {
+          "type": "string",
+          "enum": ["xss-reflected", "xss-stored", "sqli", "idor", "broken-auth", "other"]
+        },
+        "title": { "type": "string" },
+        "file": { "type": "string", "description": "repo-relative path" },
+        "line": { "type": "integer", "minimum": 1 },
+        "endLine": { "type": "integer", "minimum": 1 },
+        "codeSnippet": { "type": "string" },
+        "cwe": { "type": "string", "description": "e.g. CWE-89" },
+        "owasp": { "type": "string", "description": "e.g. A03:2021-Injection" },
+        "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+        "tentativeSeverity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low", "info"],
+          "description": "pre-validation guess; the real severity is set by Layer 2 only if exploited"
+        },
+        "inScope": {
+          "type": "boolean",
+          "description": "true if the vulnerable sink is within the PR change scope (Layer 2 only attacks in-scope findings)"
+        },
+        "rationale": { "type": "string", "description": "why this is suspected (taint path, missing escape, etc.)" },
+        "exploitHint": {
+          "type": "object",
+          "description": "everything Layer 2 needs to attempt an exploit",
+          "required": ["endpoint", "method"],
+          "additionalProperties": false,
+          "properties": {
+            "endpoint": { "type": "string", "description": "e.g. /api/search" },
+            "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+            "parameter": { "type": "string", "description": "tainted param/field, e.g. q" },
+            "injectionPoint": { "type": "string", "enum": ["query", "path", "body", "header", "cookie", "form"] },
+            "authContext": {
+              "type": "string",
+              "enum": ["anonymous", "low-priv-user", "other-user", "admin", "unknown"],
+              "description": "the role/session the exploit should run as"
+            },
+            "renderSink": { "type": "string", "description": "where tainted data is reflected/stored/rendered, for XSS verification" },
+            "payloadIdea": { "type": "string", "description": "a suggested starting payload" },
+            "notes": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
