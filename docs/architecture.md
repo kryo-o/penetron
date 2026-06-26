@@ -12,14 +12,14 @@ flowchart TD
     S --> L2[Validate exploits — Agent Builder 'Penetron Coordinator']
     L2 -->|calls 7 MCP tools| MCP[(Penetron Remote MCP)]
     L2 --> G{Exploitability gate\ncontent.includes 'OPEN_TICKET'}
-    G -->|OPEN_TICKET| A[Human approval — Action Center]
+    G -->|OPEN_TICKET| A[Human approval]
     G -->|CLEAN| E1([End: all clear])
-    A -->|approved| W[Jira bug + Slack notify]
+    A -->|approved| W[Slack notify · defect ticketing → v2]
     W --> E2([End: audited])
 ```
 
 > Current deployed/green build runs `Start → Validate exploits → End` (the gate logic still executes inside the
-> agent and surfaces as `content = OPEN_TICKET`). The approval + Jira/Slack branch is built and being wired back in
+> agent and surfaces as `content = OPEN_TICKET`). The approval + Slack branch is built and being wired back in
 > (Action Center provisioning — see `PROJECT-PLAN.md` M8e).
 
 ## Layer 2 — how a verdict is produced
@@ -57,7 +57,7 @@ sequenceDiagram
 | Bridge | **Remote MCP server** (`pentests/src/mcp/server.ts`) | Stateful Streamable HTTP, 7 tools, method-scoped auth (discovery open; `tools/call` gated by bearer **or** UiPath org-id). |
 | Execution | **TS + Playwright** (`pentests/src`) | Generates/replays PR-scoped exploit scenarios, asserts on exploitation signals, captures evidence (screenshots, traces). |
 | Evidence | **UiPath Test Manager** | Test set + execution per run; red/green = the exploit locker. |
-| Writes | Jira REST + Slack Block Kit | Gated behind human approval. |
+| Writes | Slack Block Kit (defect ticketing, e.g. Jira, on the v2 roadmap) | Gated behind human approval. |
 
 ## Exploit coverage (vs. `target-app/VULNS.md` ground truth)
 

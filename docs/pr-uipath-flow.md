@@ -2,7 +2,7 @@
 
 The pure-UiPath path: a PR triggers the **UiPath Maestro** process, the **Agent Builder agent (Claude)**
 runs the Penetron tools and verifies the change, and UiPath **reports the verdict back to GitHub** to block
-(or allow) the merge — then files Jira + Slack. GitHub only triggers and gates; **UiPath does the work.**
+(or allow) the merge — then notifies Slack. GitHub only triggers and gates; **UiPath does the work.** *(Automated Jira ticketing: v2 roadmap.)*
 
 ```
 PR opened / synchronize
@@ -12,7 +12,7 @@ PR opened / synchronize
        3. set GitHub commit status  context="penetron/uipath"  state=pending
   → UiPath Maestro (the brain)
        agent → MCP tools → real exploits → exploitability gate
-       → Action Center approval → Jira bug + Slack notify
+       → human approval → Slack notify   (Jira ticketing → v2)
   → UiPath HTTP task (callback)
        POST https://api.github.com/repos/<owner>/<repo>/statuses/<commitSha>
             { state: "failure"|"success", context: "penetron/uipath", description, target_url }
