@@ -23,7 +23,7 @@ locally and are **not** committed; this file captures the reproducible facts.)
 ## Gate decision (latest)
 - Decision: **OPEN_TICKET**
 - Exploited: **6** · Discarded: **1** · Hardening: **4**
-- Highest severity: **critical** → Jira priority **Highest**
+- Highest severity: **critical** → priority **Highest**
 
 ## Proven exploits (6) + safe control (1)
 | ID | Class | Verdict |

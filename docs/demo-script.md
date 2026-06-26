@@ -43,9 +43,9 @@ Show the one-liner: *"Flagged 7 → proved 6, discarded 1."*
   > the red/green exploit locker, with screenshots and traces attached."
 
 **[4:10–4:40] Governance & close**
-- Show the two reports (Exploitable Vulnerabilities + Suggested Improvements) and the gated Jira/Slack writes.
-  > "Before anything is filed, a human approves — UiPath Action Center. Then Jira gets a prioritized bug and Slack
-  > a summary. Maestro keeps the full audit trail."
+- Show the two reports (Exploitable Vulnerabilities + Suggested Improvements) and the **Slack** notification.
+  > "Before anything is sent, a human approves — the governance checkpoint. Then Slack gets a prioritized summary
+  > with links to the evidence. Maestro keeps the full audit trail. (Automated Jira ticketing is the v2 step.)"
 - Close on the thesis: *"Penetron proves exploitability, filters the noise, and lets UiPath govern the fix."*
 
 ## Coding-agent bonus (optional 20s or mention in description)

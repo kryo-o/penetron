@@ -4,7 +4,7 @@ This is an **intentionally vulnerable** demo app ("Acme Demo Shop") used as Pene
 
 This file is the **ground truth**: it lets the demo prove Penetron's *precision* — every `exploited: true` should map to a real bug below, and the safe control should come back `exploited: false`.
 
-## Exploitable (should appear in the Exploitable Vulnerabilities report + Jira)
+## Exploitable (should appear in the Exploitable Vulnerabilities report)
 
 | ID | Class | CWE | Endpoint | How to exploit | Exploit signal |
 |----|-------|-----|----------|----------------|----------------|
