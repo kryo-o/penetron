@@ -68,7 +68,9 @@ Evidence: [`docs/coding-agent-evidence/`](docs/coding-agent-evidence/).
 | Capability | Status | Evidence |
 |---|---|---|
 | Vulnerable target app (Express + React, 6 planted OWASP bugs + safe control) | ✅ | `target-app/VULNS.md`; `npm run smoke` → 8/8 |
-| Layer 2 exploit runner (TS + Playwright, replay) | ✅ | `npm run exploit` → **6/7 proven, 1 discarded**, schema-valid |
+| **Layer 1 — SAST + change-impact (diff-driven)** | ✅ | `npm run layer1` → reads the PR diff, emits candidate findings scoped to the change; schema-valid |
+| **On-PR trigger (GitHub Action)** | ✅ | `.github/workflows/penetron-pr.yml` → Layer 1 → Layer 2 → PR comment "flagged N → proved X, discarded Y" |
+| Layer 2 exploit runner (TS + Playwright, replay + regenerate) | ✅ | `npm run exploit` (replay) / `npm run exploit:pr` (regenerate) → **6/7 proven, 1 discarded**, schema-valid |
 | Exploitability gate + two reports | ✅ | `npm run report` → `OPEN_TICKET`, priority `Highest` |
 | Jira + Slack integrations | ✅ (dry-run) | valid ADF Bug + Block Kit; live on creds |
 | **Test Manager S2S sync** | ✅ LIVE | tenant `hackathon26_879`, project **PEN**; executions `f689d631…`, `fe3f6e8d…` (6 Failed / 1 Passed) |
@@ -100,6 +102,20 @@ npm run exploit      # 6/7 proven exploitable, 1 safe control resists
 npm run report       # exploitability gate -> OPEN_TICKET + two reports
 npm run pipeline     # exploit -> report -> Test Manager sync -> Jira + Slack (dry-run w/o creds)
 ```
+
+### Run it as it runs on a PR (Layer 1 → Layer 2)
+
+```bash
+cd pentests
+npm run layer1                              # SAST on the diff -> PR-scoped candidate findings
+npm run exploit:pr                          # prove/discard ONLY those candidates (regenerate mode)
+npm run report                              # gate -> OPEN_TICKET
+# or all three:  npm run pr
+# scope to a real diff:  PENETRON_DIFF_RANGE=origin/main...HEAD npm run layer1
+```
+
+On GitHub, `.github/workflows/penetron-pr.yml` runs this automatically on any PR touching
+`target-app/**` and posts the results as a PR comment. See [`docs/pr-flow.md`](docs/pr-flow.md).
 
 Artifacts land in `pentests/evidence/`: `verdicts.json`, `exploitable-vulnerabilities.md`,
 `suggested-improvements.md`, `gate-summary.json`, XSS screenshots + Playwright traces, `jira-payload.json`,

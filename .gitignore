@@ -23,6 +23,8 @@ playwright-report/
 
 # Penetron run artifacts (regenerated each run)
 pentests/evidence/
+pentests/scenarios-generated/
+engine/generated/
 **/*.tmp
 
 # Playwright MCP session captures (page snapshots/screenshots + may contain secrets — never commit)

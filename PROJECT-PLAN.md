@@ -54,7 +54,7 @@ deploy / Slack trigger
 | M4 | Exploitability gate + two reports | ✅ | `npm run report` → gate-summary `OPEN_TICKET`; Report A + Report B |
 | M5 | Jira + Slack integrations | 🟢 | `npm run jira` / `slack` → valid ADF Bug + Block Kit (dry-run); live on creds |
 | M6a | Layer 1 replay output (candidates + attack surface) | ✅ | `engine/replay/candidate-findings.json` |
-| M6b | Layer 1 **regenerate** (Claude Code live generation) | ⏳ | pending approach decision (see Open questions) |
+| M6b | Layer 1 SAST + change-impact (diff-driven) | ✅ | `pentests/src/layer1/analyze.ts` (`npm run layer1`) — reads the PR diff, emits candidate-findings + attack-surface scoped to the change; feeds Layer 2 regenerate (`npm run exploit:pr`). Verified diff-scoped (1 file changed → 1 candidate). Heuristic rules now; Claude Code can back the same contract. |
 | M11 | Playwright Agent CLI (`@playwright/cli`) wired | 🟡 | skill at `.claude/skills/playwright-cli`; powers regenerate live-drive |
 | M7 | Test Manager S2S sync (Test Cloud evidence) | ✅ | `npm run tm:sync` → LIVE on tenant `hackathon26_879`; project PEN; execution 6 Failed (exploited) / 1 Passed (safe control); `evidence/tm-sync-result.json` |
 | M8c | Penetron Remote MCP server (D1 bridge) | ✅ | `npm run mcp` (stdio) / `npm run mcp:http` (**stateful**, dual-auth: bearer OR org-id header). 7 tools: run_exploits, generate_reports, get_gate, sync_test_manager, run_full_pipeline, **file_jira_ticket, notify_slack**; `npm run mcp:smoke` / `mcp:smoke:http` pass |
@@ -63,7 +63,7 @@ deploy / Slack trigger
 | M8e | Action Center approval (Human Task) | ⛔ | Built SimpleApprovalApp (Simple Approval template, Content=vars.content). BLOCKED: Maestro "Create action app task" → **AppTasks request 404 NotFound** (Action Center not reachable/provisioned for the debug identity in Solution folder). Bypassed for the green run. Alt path to try: User task supports Email/Slack/Teams delivery channels (not just Action Center) — may sidestep the 404. |
 | M8b | Orchestrator External App + Credential Assets | ⏳ | move MCP bearer + Jira/Slack secrets to Assets; for hardened auth + automated job start |
 | M8 | UiPath Maestro + Agent Builder + `uip` deploy | 🟡 | agent↔Penetron LIVE; Maestro shape built; remaining: approval app, Jira/Slack, stable tunnel, deploy · plan → `docs/uipath-integration-plan.md` |
-| M9 | Triggers (deploy webhook + Slack `/pentest`) | ⏳ | relay + GH Action; public webhook needs tenant |
+| M9 | Triggers (PR Action ✅ · deploy webhook + Slack `/pentest` ⏳) | 🟢 | `.github/workflows/penetron-pr.yml` — on PR touching target-app: Layer 1 → Layer 2 → PR comment + evidence artifact + optional Maestro start. Deploy webhook + Slack slash still pending. |
 | M10 | Local "insurance" orchestrator (full flow, no UiPath) | ⏳ | optional demo safety net |
 | M12 | Packaging: README · deck · demo video · evidence | ⏳ | required deliverables |
 
