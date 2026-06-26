@@ -38,34 +38,35 @@ jobs:
           npm ci || npm install
           npx playwright install --with-deps chromium
 
-      - name: Build & start target app (non-production fixture)
+      - name: Build target app (non-production fixture)
         working-directory: target-app
         run: |
           npm ci || npm install
           npm run build:client
-          (npm start &)
-          # wait for health
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:4000/api/health >/dev/null; then echo "target up"; break; fi
-            sleep 1
-          done
 
-      # ---- Layer 1: SAST + impact, scoped to the PR diff ----
-      - name: Layer 1 — analyze the PR diff
-        working-directory: pentests
+      # ---- Start the app + Layer 1 + Layer 2 in ONE step ----
+      # A background process started in a step does NOT survive into later steps on GitHub
+      # runners, so the app MUST be started in the same step that runs the exploits.
+      - name: Run Penetron (start app -> Layer 1 -> Layer 2 -> gate)
         env:
           PENETRON_DIFF_RANGE: origin/${{ github.base_ref }}...HEAD
           PENETRON_PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: npm run layer1
-
-      # ---- Layer 2: prove or discard each candidate against the running app ----
-      - name: Layer 2 — prove exploitability
-        working-directory: pentests
-        env:
           PENETRON_TARGET_URL: http://localhost:4000
         run: |
+          # start the target app in the background (stays alive for the rest of THIS step)
+          PORT=4000 node target-app/server/index.js &
+          APP_PID=$!
+          up=0
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4000/api/health >/dev/null; then up=1; echo "target up"; break; fi
+            sleep 1
+          done
+          if [ "$up" != "1" ]; then echo "::error::target app failed to start"; cat /tmp/* 2>/dev/null; exit 1; fi
+          cd pentests
+          npm run layer1
           npm run exploit:pr
           npm run report
+          kill "$APP_PID" 2>/dev/null || true
 
       - name: Upload evidence
         if: always()
