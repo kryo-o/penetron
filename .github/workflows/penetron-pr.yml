@@ -149,3 +149,24 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"startInfo\":{\"ReleaseKey\":\"${{ secrets.UIPATH_RELEASE_KEY }}\",\"InputArguments\":\"{\\\"prNumber\\\":${{ github.event.pull_request.number }}}\"}}" \
             || echo "Maestro start skipped/failed (non-blocking)."
+
+      # ---- Gate enforcement: FAIL the check if Penetron proved an exploit ----
+      # Runs last (always) so the comment + evidence still post. Combine with a branch-protection
+      # rule requiring "Penetron PR Security Gate" to make the merge actually blocked.
+      - name: Enforce gate (block PR on proven exploits)
+        if: always()
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "pentests/evidence/gate-summary.json";
+            if (!fs.existsSync(p)) {
+              console.error("::error title=Penetron::Scan did not complete (no gate summary) — failing closed.");
+              process.exit(1);
+            }
+            const g = JSON.parse(fs.readFileSync(p, "utf8"));
+            if (g.decision === "OPEN_TICKET") {
+              console.error(`::error title=Penetron blocked this PR::${g.exploitedCount} proven exploit(s), highest severity ${g.highestSeverity} (priority ${g.jiraPriority}). See the PR comment + the penetron-evidence artifact.`);
+              process.exit(1);
+            }
+            console.log(`Penetron gate: ${g.decision} — no proven exploits. PR may proceed.`);
+          '
