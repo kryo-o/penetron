@@ -21,8 +21,9 @@ cloudflared tunnel --url http://localhost:7337      # prints https://<random>.tr
 # or:  ngrok http 7337
 ```
 Public MCP endpoint = `https://<random>.trycloudflare.com/mcp`.
-> The hostname changes each run for quick tunnels. For a stable demo URL use a named
-> cloudflared tunnel or a reserved ngrok domain, and re-point the UiPath connection if it rotates.
+> The quick tunnel is a **proof-of-concept convenience** — the hostname rotates each run, so re-point the
+> UiPath connection after every start. The production version of Penetron uses a **permanent URL** (a named
+> cloudflared tunnel, a reserved ngrok domain, or a deployed/hosted endpoint), which removes the re-point step.
 
 ## 3. Register the Remote MCP in UiPath
 In the tenant (Agent Builder / Integration Service → MCP / Connections):

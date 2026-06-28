@@ -32,7 +32,10 @@ Claude Code built and deployed the project:
   clean single-server rebuild, duplicate-server-slug deploy failures, detached BPMN sequence flows.
 - Verified the full live spine: agent Debug → real exploits → Test Manager executions `f689d631…`, `fe3f6e8d…`.
 
-## What to capture here before submission
+## Verifiable evidence
+Per the rules, a **dedicated README section qualifies as evidence** — this file plus the README's "Coding agent"
+section already document the tool (Claude Code), its contribution (Roles A & B above), and meaningful integration.
+To strengthen it to the full **2 bonus points**, attach at least one of the following before submitting:
 - [ ] Screenshots: the Maestro green run trace (Validate exploits 48s → End), the `content = OPEN_TICKET` variable.
 - [ ] Screenshot: Test Manager PEN dashboard (6 Failed / 1 Passed).
 - [ ] Screenshot: MCP server terminal showing `tools/call` during the agent run.
