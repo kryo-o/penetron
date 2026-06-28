@@ -38,6 +38,7 @@ Headline result on the demo PR: **Flagged 7 → proved 6, discarded 1.**
 - **Agent type (UiPath):** a **Low-code Agent** (Agent Builder "Penetron Coordinator"). Penetron does **not** use UiPath **Coded Agents** — the exploit engine is external TypeScript reached via Remote MCP.
 - **Coding agent (the bonus):** **Claude Code** is used in two roles — **(A)** Penetron's analysis/exploit brain, and **(B)** the build-time engineer that wrote the engine + MCP server + Test Manager sync and **drove the UiPath Studio Web / Orchestrator GUI** (via Playwright MCP) to register the MCP server, bind the agent, and deploy the Maestro process.
 - **PR integration:** a GitHub Action runs Layer 1 → Layer 2 on each PR, posts a verdict comment, and fails the required check on a proven exploit (with branch protection → merge blocked).
+- **UiPath-native PR trigger:** a GitHub **Pull Request** also auto-starts the Maestro **Penetron Security Gate** via the UiPath **Integration Service GitHub connector** (polling) — agent → MCP → real exploits → live **Test Manager** execution. Verified end-to-end.
 
 ## Challenges we ran into
 - **Remote MCP over a rotating tunnel:** UiPath's agenthub proxy forwards an org-id but not our bearer at discovery time, so we built **method-scoped auth** (open discovery, gated execution). Tunnel URL rotation and a stale-agenthub-GUID 502 each needed a clean recovery playbook.
@@ -49,6 +50,7 @@ Headline result on the demo PR: **Flagged 7 → proved 6, discarded 1.**
 - A **UiPath agent that runs real exploits** and writes audit-grade **Test Manager** evidence — live.
 - A PR that **gets its merge blocked** because Penetron proved an exploit — shift-left security, automated.
 - Claude Code building *and deploying* the UiPath integration (the documented +2 bonus).
+- **A GitHub PR natively triggers the UiPath Maestro security gate** (Integration Service connector) → live Test Manager evidence — security validation orchestrated by UiPath, kicked off straight from the dev workflow.
 
 ## What we learned
 - Dynamic proof beats static flagging for precision — and pairs perfectly with an LLM agent: **AI proposes, execution disposes.**
@@ -58,7 +60,7 @@ Headline result on the demo PR: **Flagged 7 → proved 6, discarded 1.**
 ## What's next (v2)
 - **Automated defect ticketing (Jira)** — prototype already built, gated behind approval.
 - **Live `regenerate` Layer 1** — Claude Code generates exploits from the diff (heuristic ships today).
-- **Native PR→UiPath auto-trigger** — GitHub starts the Maestro pipeline (trigger script + design committed).
+- **UiPath→GitHub status callback** — let the UiPath run set the PR check to block the merge directly (the PR→UiPath trigger + run + live evidence are already done).
 - **Hardening** — stable named tunnel, MCP bearer + secrets in Orchestrator Credential Assets.
 
 ## Built with
