@@ -106,6 +106,7 @@ PR / deploy ─► UiPath Maestro (orchestration · governance · audit)
 ### Shift-left: the gate blocks a real merge
 - Penetron runs on every PR → posts a verdict comment → **a proven exploit turns the required check RED → merge blocked.**
 - Two surfaces: a fast **GitHub-native** check (reach) **+** the **UiPath-governed** pipeline (depth). Same engine.
+- **UiPath-native trigger (live):** a GitHub PR auto-starts the Maestro Security Gate via the Integration Service connector → agent → exploits → Test Manager evidence.
 
 *[Insert screenshot: PR with red check + "Merge blocked" + "flagged 1 → proved 1 → OPEN_TICKET"]*
 
@@ -146,7 +147,7 @@ PR / deploy ─► UiPath Maestro (orchestration · governance · audit)
 ## Slide 13 — Roadmap (v2)
 - **Automated defect ticketing (Jira)** — prototype already built, gated behind approval.
 - **Live `regenerate` Layer 1** — Claude Code generates exploits from the diff.
-- **Native PR→UiPath auto-trigger** — GitHub starts the Maestro pipeline (architecture + trigger script done).
+- **UiPath→GitHub status callback** — UiPath sets the PR check to block the merge (the PR→UiPath trigger + run are already live).
 - **Stable named tunnel + Credential Assets** hardening.
 
 *Speaker: "The architecture is built; these are the next hardening steps."*

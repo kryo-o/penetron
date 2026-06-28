@@ -20,7 +20,7 @@ Built for the **UiPath AgentHack — Track 3** (agentic software testing with Ui
 ## What it does (the flow)
 
 ```
-deploy / trigger
+GitHub PR (UiPath GitHub connector trigger)  ·  or deploy / Slack / manual
   → UiPath Maestro (BPMN · orchestration · governance · audit)
      → Layer 1  Claude Code SAST + PR impact analysis      → candidate findings
      → Layer 2  Agent Builder agent → Penetron MCP →        → proven verdicts
@@ -81,12 +81,13 @@ Evidence: [`docs/coding-agent-evidence/`](docs/coding-agent-evidence/).
 | Layer 2 exploit runner (TS + Playwright, replay + regenerate) | ✅ | `npm run exploit` (replay) / `npm run exploit:pr` (regenerate) → **6/7 proven, 1 discarded**, schema-valid |
 | Exploitability gate + two reports | ✅ | `npm run report` → `OPEN_TICKET`, priority `Highest` |
 | Slack integration | ✅ LIVE | Block Kit summary posts to the channel on a finding |
-| **Test Manager S2S sync** | ✅ LIVE | tenant `hackathon26_879`, project **PEN**; executions `f689d631…`, `fe3f6e8d…` (6 Failed / 1 Passed) |
+| **Test Manager S2S sync** | ✅ LIVE | tenant `hackathon26_879`, project **PEN**; executions `f689d631…`, `fe3f6e8d…`, `47c525b7…` (6 Failed / 1 Passed each) |
 | **Remote MCP server** (7 tools, stateful, dual-auth) | ✅ LIVE | `npm run mcp:http`; agent calls it through a cloudflared tunnel |
 | **Agent Builder coordinator → MCP** | ✅ LIVE | Debug run ~48s → real exploits → TM execution |
-| **Maestro process published + run green** | ✅ LIVE | solution v1.0.3; instance: Start → Validate exploits (48s) → End, Successful; `content = OPEN_TICKET` |
+| **Maestro process published + run green** | ✅ LIVE | solution v1.0.6; instance: Start → Validate exploits → End, Successful; `content = OPEN_TICKET` |
+| **PR → UiPath trigger (GitHub connector → Maestro)** | ✅ LIVE | GitHub **Pull Request Created** (Integration Service, polling) auto-starts `Penetron Security Gate` → Successful (1m13s) → new TM execution `47c525b7…` (6 Failed / 1 Passed), 2026-06-28 |
 | Action Center human approval | ⛔ | designed; approval app built, but Maestro→AppTasks 404 (not provisioned for the debug identity) so it was removed from the green run — see `PROJECT-PLAN.md` (M8e) |
-| Triggers (deploy webhook + Slack `/pentest`) | ⏳ | planned (M9) |
+| Triggers — GitHub PR (UiPath connector) ✅ · deploy webhook + Slack `/pentest` ⏳ | 🟢 | GitHub PR trigger LIVE (row above); deploy webhook + Slack slash still planned |
 
 See [`PROJECT-PLAN.md`](PROJECT-PLAN.md) for the full milestone tracker and [`docs/architecture.md`](docs/architecture.md)
 for the design.
@@ -164,9 +165,12 @@ It prints a **public MCP URL** like `https://<random>.trycloudflare.com/mcp`.
 
 **2. Point UiPath at the tunnel ⚠️ — do this every run**
 `trycloudflare` quick-tunnel URLs **rotate on every start**, so after each `start-stack.sh` the
-agent will hit a stale URL (502) until you re-point it:
-- UiPath **Orchestrator → MCP Servers → `Penetron` → Edit → Remote URL** = the printed `…/mcp`.
-- In the agent, **Refresh tools** so it re-discovers the 7 tools against the new URL.
+agent will hit a stale URL (502) until you re-point it. **You only need to update the URL — do *not*
+delete or recreate the MCP server:**
+- UiPath **Orchestrator → MCP Servers → `Penetron` → Edit** → set **Remote URL** = the printed `…/mcp`
+  (keep the `Authorization` bearer header) → **Update / Save**. *(Just save — you don't need the
+  "Connect to MCP" button; the 7 tools re-discover automatically.)*
+- In the agent, **Refresh tools** so it picks up the new URL.
 
 > First-time registration (creating the MCP Server entry + binding the agent) is in
 > [`uipath/mcp/register-remote-mcp.md`](uipath/mcp/register-remote-mcp.md).
@@ -202,6 +206,7 @@ Out of scope for this submission, planned next:
 - **Live `regenerate` Layer 1** via Claude Code on the PR diff (the heuristic analyzer ships today).
 - **Permanent MCP endpoint** (named cloudflared tunnel / reserved domain / hosted deploy — no rotation, no per-run re-point) + MCP bearer in an Orchestrator Credential Asset.
 - **Deploy webhook + Slack `/pentest`** triggers.
+- **UiPath→GitHub commit-status callback** — let the UiPath run set the PR check directly to block the merge. *(The PR→UiPath trigger + run + evidence are already live; today the GitHub Action does the merge-blocking.)*
 
 ## Security & scope
 
