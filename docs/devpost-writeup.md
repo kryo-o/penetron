@@ -19,7 +19,7 @@ Penetron is a two-layer agentic security gate:
 - **Layer 2 — dynamic exploit validation:** a **UiPath Agent Builder agent (Claude Sonnet)** calls Penetron's exploit engine over a **Remote MCP server** and runs *real* attacks — SQL injection, reflected/stored XSS, IDOR/BOLA, broken authentication — against the running app. It asserts on a genuine **exploitation signal** (payload renders unescaped, auth bypassed, another user's data returned `200`), not a string match.
 - **Exploitability gate:** only `exploited == true` advances. The deliberately-safe endpoint is correctly discarded — **no false positives.**
 - **Evidence:** every verdict is synced to **UiPath Test Manager** as a red (exploited) or green (resisted) test result, with screenshots and Playwright traces.
-- **Governance:** a human approves before any external action; **UiPath Maestro** keeps the full audit trail; **Slack** posts a prioritized summary.
+- **Governance:** a human-approval checkpoint is designed into the Maestro flow before any external action (Action Center; provisioning blocked in the hackathon tenant — see the repo Status); **UiPath Maestro** keeps the full audit trail; **Slack** posts a prioritized summary.
 - **Dev workflow:** Penetron runs on every pull request and **blocks the merge** when it proves an exploit.
 
 Headline result on the demo PR: **Flagged 7 → proved 6, discarded 1.**
@@ -65,4 +65,4 @@ Headline result on the demo PR: **Flagged 7 → proved 6, discarded 1.**
 - **Repo:** https://github.com/kryo-o/penetron (MIT)
 - **Demo video:** [add link]
 - **Deck:** `docs/deck.md`
-- **Architecture:** `docs/architecture.md` · **Run-of-show:** `docs/demo-plan.md`
+- **Architecture:** `docs/architecture.md` · **PR flow:** `docs/pr-flow.md`

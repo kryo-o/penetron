@@ -47,7 +47,7 @@ PR / deploy ─► UiPath Maestro (orchestration · governance · audit)
    ├─ Layer 2: UiPath Agent → MCP → Playwright/HTTP   → PROVEN verdicts
    │            exploits the RUNNING app                + Test Manager evidence
    ├─ Exploitability gate (only exploited == true advances)
-   ├─ Human approval (governance checkpoint)
+   ├─ Human approval (designed checkpoint — Action Center; see repo Status)
    └─ Slack notification     (defect ticketing → v2)
 ```
 
@@ -62,7 +62,7 @@ PR / deploy ─► UiPath Maestro (orchestration · governance · audit)
 | **Agent Builder** | The verification brain — Claude Sonnet agent runs the exploit tools |
 | **Remote MCP Server** | Bridges the cloud agent to Penetron's engine (7 tools) |
 | **Test Manager / Test Cloud** | System of record — red/green exploit evidence |
-| **Maestro (BPMN)** | Orchestration, gate, human approval, audit trail |
+| **Maestro (BPMN)** | Orchestration, gate, human-approval (designed), audit trail |
 | **Orchestrator** | Solution packaging, folders, identity, secrets |
 
 *Speaker: "The agent, the evidence, and the governance all live on UiPath."*
@@ -114,8 +114,8 @@ PR / deploy ─► UiPath Maestro (orchestration · governance · audit)
 ---
 
 ## Slide 10 — Governance & audit
-### A human approves; UiPath records everything
-- Exploitability gate → **human approval** before any external action.
+### Human approval by design; UiPath records everything
+- Exploitability gate → **human approval** before any external action *(designed in Maestro; Action Center provisioning blocked in the hackathon tenant — see repo Status)*.
 - **Slack** notification with prioritized summary + evidence links.
 - **Maestro** retains the full audit trail; least-privilege Orchestrator identity.
 
@@ -136,7 +136,7 @@ PR / deploy ─► UiPath Maestro (orchestration · governance · audit)
 ### Why it matters
 - **Precision:** only proven exploits → no alert fatigue, no wasted triage.
 - **Speed:** PR-scoped, automated, continuous — security at dev pace.
-- **Governance:** human-approved, fully audited on UiPath.
+- **Governance:** human-approval checkpoint by design, audited on UiPath.
 - **Evidence:** every claim backed by a reproducible red/green result.
 
 *Speaker: "Fewer false positives, faster feedback, full audit trail."*

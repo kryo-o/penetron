@@ -20,7 +20,7 @@ deploy / Slack trigger
       → Layer 2  TS/Playwright exploit validation           → proven verdicts + Test Manager evidence
       → Exploitability gate (only exploited == true advances)
       → Two reports (Exploitable Vulns · Suggested Improvements)
-      → Human approval (Action Center)
+      → Human approval (Action Center · designed; blocked — see M8e)
       → Slack notification (automated defect ticketing → v2 roadmap)
 ```
 
@@ -29,21 +29,10 @@ deploy / Slack trigger
 
 > **UiPath access landed 2026-06-24** — tenant `hackathon26_879` / `DefaultTenant`. Test Manager S2S connection verified live (M7 ✅). Connection facts in `docs/uipath-integration-plan.md` + `.env`.
 
-## ▶ NEXT SESSION — start here (as of 2026-06-24 end of day)
-**Biggest win so far:** the full cloud spine works LIVE — a UiPath Agent Builder agent ("Penetron Coordinator", claude-sonnet-4-6) calls Penetron via Remote MCP through a cloudflared tunnel, runs real exploits, and writes 6🔴/1🟢 evidence to Test Manager (project PEN). Proven via agent Debug run.
+## Status summary
+The full cloud spine works live: a UiPath Agent Builder agent (`Penetron Coordinator`, claude-sonnet-4-6) calls Penetron over Remote MCP through a cloudflared tunnel, runs real exploits, and writes 6🔴/1🟢 evidence to Test Manager (project PEN). The `Penetron Security Gate` Maestro process is published and ran green (`Start → Validate exploits → End`). To bring the stack up: `./scripts/start-stack.sh` — full reproduction steps (incl. the per-run tunnel re-point) are in the README.
 
-**Bring the stack back up first:** `./scripts/start-stack.sh` → it prints a NEW cloudflared URL (trycloudflare rotates each run) → update UiPath **Orchestrator → MCP Servers → Penetron → Remote URL = `<new>/mcp`** → in the agent, **Refresh tools**. Details in memory `penetron-demo-stack.md`.
-
-**Maestro process "Penetron Security Gate"** (in Solution "Penetron", same place as the agent) is built as: `Start → Validate exploits (Coordinator agent) → Exclusive gateway [cond: vars.content.includes("OPEN_TICKET")] → (OPEN_TICKET → End) / (default path → End)`. The Action Center approval node was REMOVED tonight (it needs a real Action app — a GUI detour). Was at 0–1 validation issues; user finishing the last 2 clicks (delete approval + add End on the OPEN_TICKET branch).
-
-**To resume M8, in priority order:**
-1. **Publish + Debug the Maestro process** end-to-end (it calls the agent → which calls Penetron MCP). Confirm a new TM execution appears.
-2. **Re-add Action Center approval (M8e)** between gateway and the writes — build a minimal Action app (Approve/Reject) showing `vars.content`. This is the governance highlight.
-3. **Add Jira + Slack after approval** — MCP tools `file_jira_ticket` + `notify_slack` already exist on the server; call them via Maestro "Tools" tasks or a small notifier agent. (Need real Jira/Slack creds in `.env` for live; dry-run otherwise.)
-4. **Harden for recording:** stable named cloudflared tunnel (URL stops rotating) + move MCP bearer to an Orchestrator **Credential Asset** (M8b).
-5. Then **M9 triggers** + **M10 packaging** (README, deck, ≤5-min video, evidence).
-
-**Playwright MCP for browser control:** `.mcp.json` is created (official `@playwright/mcp`). To let Claude drive the UiPath GUI directly (end the screenshot loop), run `/mcp` (or restart claude) to load+approve it, then handle the one-time UiPath Google login in the controlled (headed) browser. Deferred to 2026-06-25 per user.
+**Remaining:** Action Center approval (⛔ blocked — M8e), Jira/Slack-after-approval, a stable named tunnel + MCP bearer in a Credential Asset (M8b), M9 triggers, and M12 packaging (demo video).
 
 ## Milestones
 | # | Milestone | Status | Evidence / notes |

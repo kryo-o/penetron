@@ -27,7 +27,10 @@ it does not itself drive a browser (that is the Penetron MCP via the agent).
 5. **Two reports** — already produced by `generate_reports` during the agent run;
    surfaced as links (Exploitable Vulnerabilities, Suggested Improvements).
 6. **Human approval** (User Task → Action Center) — pauses until a human approves the
-   external writes. This is the governance checkpoint. (M8e.)
+   external writes. This is the governance checkpoint. **Status: designed but blocked** —
+   the approval app was built, but Maestro→AppTasks returned 404 (Action Center not
+   provisioned for the debug identity in the Solution folder), so the node was removed
+   from the green run. See `../../PROJECT-PLAN.md` M8e. (M8e.)
 7. **Notify** (Service task → API workflow / REST):
    - Slack: post Block Kit summary + links (reports · Test Manager dashboard), priority = `jiraPriority`.
    - *(v2: automated defect ticketing — e.g. Jira Bug with assignee/priority/PoC — gated behind the same approval.)*
