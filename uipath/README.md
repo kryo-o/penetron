@@ -21,7 +21,7 @@ deploy / Slack trigger
                                                    (pentests/src/mcp/server.ts)
       → exploitability gate (only exploited==true advances)
       → Test Manager evidence (already live: project PEN)
-      → Action Center approval  (User Task)
+      → Action Center approval  (User Task · designed; blocked — see M8e)
       → Jira bug + Slack notify
 ```
 
@@ -33,4 +33,4 @@ deploy / Slack trigger
 ## Status
 - M8c MCP server: ✅ built (`npm run mcp` stdio / `npm run mcp:http`).
 - M8d Maestro + agent: 🟡 specs here; authored in Studio Web / Agents UI.
-- M8e Action Center approval: ⏳.
+- M8e Action Center approval: ⛔ blocked — approval app built, but Maestro→AppTasks 404 (Action Center not provisioned for the debug identity in the Solution folder); removed from the green run. See `../PROJECT-PLAN.md` M8e.
