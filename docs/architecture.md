@@ -8,7 +8,7 @@ UiPath Agent Builder agent invokes over a Remote MCP server.
 
 ```mermaid
 flowchart TD
-    T[Trigger: deploy webhook / Slack /pentest / manual] --> S([Start event])
+    T[Trigger: GitHub PR · deploy webhook · Slack /pentest · manual] --> S([Message start event])
     S --> L2[Validate exploits — Agent Builder 'Penetron Coordinator']
     L2 -->|calls 7 MCP tools| MCP[(Penetron Remote MCP)]
     L2 --> G{Exploitability gate\ncontent.includes 'OPEN_TICKET'}

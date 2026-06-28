@@ -1,11 +1,13 @@
 # PR → UiPath → Block (the UiPath-run gate)
 
-> **Status: design / build-plan — not yet wired.** This document specifies the pure-UiPath
-> round-trip (Maestro starts on a PR and calls back to set the GitHub commit status). The
-> verified shipping PR gate today is the GitHub-Action path in [`pr-flow.md`](pr-flow.md)
-> (which already fails the check on a proven exploit). The pieces below (External App,
-> `penetron-uipath.yml`, the Maestro→GitHub status callback, branch protection on
-> `penetron/uipath`) are the planned upgrade, not the current state.
+> **Status (2026-06-28): the trigger half is LIVE and verified; only the GitHub status-callback remains.**
+> A GitHub **Pull Request Created** event (UiPath **Integration Service** GitHub connector, polling) now
+> **auto-starts the `Penetron Security Gate` Maestro process** → Agent Builder Coordinator → MCP → real
+> exploits → gate → **live Test Manager execution** (`47c525b7…`, 6 Failed/1 Passed). So "PR triggers the
+> UiPath-run validation" is done. What remains is the **reverse callback** — UiPath writing the verdict back
+> to GitHub as a commit status to block the merge (today the GitHub-Action path in [`pr-flow.md`](pr-flow.md)
+> does the merge-blocking). The `triggerGate.ts`/`penetron-uipath.yml` approach below is one way to add that
+> callback; the connector-native **trigger** is already wired.
 
 The pure-UiPath path: a PR triggers the **UiPath Maestro** process, the **Agent Builder agent (Claude)**
 runs the Penetron tools and verifies the change, and UiPath **reports the verdict back to GitHub** to block

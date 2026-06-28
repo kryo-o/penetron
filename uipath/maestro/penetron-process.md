@@ -15,7 +15,9 @@ it does not itself drive a browser (that is the Penetron MCP via the agent).
 | `decision` | string | `coordinatorResult.decision` |
 
 ## Stages (BPMN)
-1. **Start event** — message start (deploy webhook) or manual/Slack trigger. (Triggers = M9.)
+1. **Message start event** — **LIVE: a GitHub Pull Request auto-starts the process** via the UiPath
+   Integration Service **GitHub connector** ("Pull Request Created", polling) — verified 2026-06-28
+   (TM execution `47c525b7…`). Also startable manually / deploy webhook / Slack. (M9.)
 2. **Intake** (Service / script task) — normalize the payload into the process variables.
 3. **Layer 2 — Penetron Coordinator** (Agent task: *Start and wait for agent*) →
    the Agent Builder agent calls the Penetron MCP and returns `coordinatorResult`.
