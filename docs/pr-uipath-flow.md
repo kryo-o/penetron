@@ -9,6 +9,32 @@
 > does the merge-blocking). The `triggerGate.ts`/`penetron-uipath.yml` approach below is one way to add that
 > callback; the connector-native **trigger** is already wired.
 
+## ▶ The one remaining piece — wire the commit-status callback (step-by-step)
+
+The PR **trigger** is live (connector → Maestro). To let the **UiPath verdict block the merge**, add an outbound
+write-back. Do it connector-native (no extra PAT needed if the GitHub connection can create statuses):
+
+1. **Capture PR context on the trigger.** In the Message Start Event ("Pull Request Created"), map the connector
+   output into process variables: `commitSha` (PR **head** SHA), `prNumber`, `repoFullName` (`owner/repo`). These
+   feed the callback. *(Today nothing is mapped — the agent runs replay regardless.)*
+2. **Add a "Create commit status" step after the gate.** On each gateway branch add a **GitHub connector →
+   Create commit status** activity (or an HTTP Request task — shape in §4 below):
+   - `repo` = `vars.repoFullName` · `sha` = `vars.commitSha` · `context` = `penetron/uipath`
+   - **OPEN_TICKET branch** → `state = failure`, description = `Penetron proved {exploitedCount} exploit(s) — OPEN_TICKET`
+   - **CLEAN branch** → `state = success`, description = `CLEAN — no proven exploits`
+   - `target_url` = the Test Manager dashboard (or the Maestro instance link)
+3. **(Optional) Set `pending` at the start.** Right after Intake, a Create-commit-status with `state = pending`
+   so the PR shows Penetron running while the agent works.
+4. **Auth.** Prefer the **existing GitHub connection** if it exposes "Create commit status". Otherwise a
+   fine-grained **PAT** (scope: *Commit statuses → Read and write* on this repo) stored in an Orchestrator
+   **Credential Asset**, referenced by the HTTP task.
+5. **Branch protection.** GitHub → repo **Settings → Branches → branch protection (`main`)** → require the status
+   check **`penetron/uipath`**. Now a `failure` from UiPath = **merge blocked by the UiPath verdict**.
+
+**End state:** PR opened → connector starts Maestro (~5-min poll) → agent proves/exploits → gate → UiPath sets
+`penetron/uipath` red/green on the commit → branch protection enforces it. A fully UiPath-owned PR gate.
+*(Keep the existing GitHub-Action `penetron` check too — belt-and-suspenders; see the safety-net note at the end.)*
+
 The pure-UiPath path: a PR triggers the **UiPath Maestro** process, the **Agent Builder agent (Claude)**
 runs the Penetron tools and verifies the change, and UiPath **reports the verdict back to GitHub** to block
 (or allow) the merge — then notifies Slack. GitHub only triggers and gates; **UiPath does the work.** *(Automated Jira ticketing: v2 roadmap.)*
