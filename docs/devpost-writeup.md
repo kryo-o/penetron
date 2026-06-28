@@ -1,9 +1,11 @@
 # Penetron — Devpost Submission
 
-> Paste these into the Devpost project page fields. Tagline, then the standard sections.
+> Paste these into the matching Devpost fields. **Field map:** Elevator pitch → below · About the project →
+> Inspiration…What's next (Markdown) · Built with → the Built with list · "Try it out" links → Links ·
+> **Video demo link (required)** → your YouTube/Vimeo URL · Deck → an open share link (not the repo path).
 
-## Tagline
-Agentic penetration testing that **proves** exploitability — and reports only what it actually exploited — governed end-to-end by UiPath.
+## Elevator pitch (≤200 chars)
+Penetron proves vulnerabilities instead of just flagging them: an AI agent exploits your running app to confirm what's real, governed end-to-end by UiPath—blocking exploitable bugs before they ship.
 
 ---
 
@@ -33,6 +35,7 @@ Headline result on the demo PR: **Flagged 7 → proved 6, discarded 1.**
   - **Test Manager / Test Cloud** — S2S sync of verdicts to a test set + execution (live on tenant `hackathon26_879`, project PEN).
   - **Maestro** — a BPMN process orchestrating Start → agent verification → exploitability gate → end, with the audit trail.
   - **Orchestrator** — solution packaging/deploy, folders, External Application (client-credentials) identity.
+- **Agent type (UiPath):** a **Low-code Agent** (Agent Builder "Penetron Coordinator"). Penetron does **not** use UiPath **Coded Agents** — the exploit engine is external TypeScript reached via Remote MCP.
 - **Coding agent (the bonus):** **Claude Code** is used in two roles — **(A)** Penetron's analysis/exploit brain, and **(B)** the build-time engineer that wrote the engine + MCP server + Test Manager sync and **drove the UiPath Studio Web / Orchestrator GUI** (via Playwright MCP) to register the MCP server, bind the agent, and deploy the Maestro process.
 - **PR integration:** a GitHub Action runs Layer 1 → Layer 2 on each PR, posts a verdict comment, and fails the required check on a proven exploit (with branch protection → merge blocked).
 
@@ -59,10 +62,10 @@ Headline result on the demo PR: **Flagged 7 → proved 6, discarded 1.**
 - **Hardening** — stable named tunnel, MCP bearer + secrets in Orchestrator Credential Assets.
 
 ## Built with
-`uipath-agent-builder` · `uipath-test-manager` · `uipath-maestro` · `uipath-orchestrator` · `model-context-protocol` · `claude` · `claude-code` · `typescript` · `playwright` · `node` · `express` · `react` · `github-actions`
+`uipath-agent-builder` · `uipath-maestro` · `uipath-test-manager` · `uipath-orchestrator` · `uipath-studio-web` · `model-context-protocol` · `claude` · `claude-code` · `typescript` · `playwright` · `node` · `express` · `react` · `github-actions` · `cloudflared`
 
-## Links
-- **Repo:** https://github.com/kryo-o/penetron (MIT)
-- **Demo video:** [add link]
-- **Deck:** `docs/deck.md`
+## Links (→ Devpost "Try it out" + required fields)
+- **Repo (Try it out):** https://github.com/kryo-o/penetron (MIT)
+- **⚠️ Demo video (REQUIRED — "Video demo link"):** _add public YouTube/Vimeo/Youku URL_
+- **⚠️ Deck (share link, not the repo path):** _render `docs/deck.md` → slides → Drive "anyone with link" → paste URL_
 - **Architecture:** `docs/architecture.md` · **PR flow:** `docs/pr-flow.md`

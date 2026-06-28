@@ -49,6 +49,14 @@ asserting on an **exploitation signal** (payload renders unescaped, auth bypasse
 | **Orchestrator** | Solution packaging/deployment, folders, MCP server registry, (Assets for secrets — hardening). |
 | **Action Center** | Human-approval User Task before any external write — **designed, not live**: the approval app was built, but Maestro→AppTasks returned 404 (Action Center not provisioned for the debug identity), so the node was removed from the green run. See Status / `PROJECT-PLAN.md` M8e. |
 
+## Agents — UiPath classification
+
+**Penetron uses a Low-code Agent.** The `Penetron Coordinator` is built in **UiPath Agent Builder**
+(Claude Sonnet 4.6, temperature 0) and calls Penetron's engine over a Remote MCP server. Penetron does **not**
+use UiPath **Coded Agents** — the exploit engine is external TypeScript/Playwright exposed to the agent via MCP,
+not a UiPath-hosted coded agent. Separately, **Claude Code** (a coding agent) was used at *build* time — the
+bonus described next.
+
 ## Coding agent (the bonus) — Claude Code
 
 Claude Code is used in **two distinct roles**:
@@ -136,6 +144,12 @@ npm run mcp:smoke:http     # -> HTTP MCP smoke OK
 The cloud demo = a UiPath **Agent Builder** agent calling Penetron's engine over the **Remote
 MCP** server (through a tunnel) and writing red/green evidence to **Test Manager**.
 
+> **Proof-of-concept setup.** The `trycloudflare` quick tunnel below is a zero-setup convenience for this
+> hackathon build — it lets the UiPath cloud agent reach a **locally-running** MCP server with no account or
+> DNS. Because quick-tunnel URLs rotate, you re-point UiPath each run (step 2). **In the production version of
+> Penetron the MCP server runs at a permanent URL** (a named cloudflared tunnel, a reserved domain, or a
+> deployed/hosted endpoint), so the per-run re-point step goes away entirely.
+
 **Prerequisites**
 - A UiPath tenant with **Agent Builder** + **Test Manager** (this build used `staging.uipath.com`, org `hackathon26_879`).
 - [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) installed.
@@ -155,8 +169,7 @@ agent will hit a stale URL (502) until you re-point it:
 - In the agent, **Refresh tools** so it re-discovers the 7 tools against the new URL.
 
 > First-time registration (creating the MCP Server entry + binding the agent) is in
-> [`uipath/mcp/register-remote-mcp.md`](uipath/mcp/register-remote-mcp.md). For a URL that
-> doesn't rotate, use a **named** cloudflared tunnel instead of the quick tunnel.
+> [`uipath/mcp/register-remote-mcp.md`](uipath/mcp/register-remote-mcp.md).
 
 **3. Run it**
 - **Agent only:** open the `Penetron Coordinator` agent → **Debug**. It calls `run_exploits →
@@ -187,7 +200,7 @@ penetron/
 Out of scope for this submission, planned next:
 - **Automated defect ticketing (Jira)** — open a prioritized bug (assignee, severity, PoC + evidence links) on approval. A working prototype already exists (`pentests/src/integrations/jira.ts` + the `file_jira_ticket` MCP tool); it's parked behind the approval step pending live Jira credentials and is not part of the current demo.
 - **Live `regenerate` Layer 1** via Claude Code on the PR diff (the heuristic analyzer ships today).
-- **Stable named tunnel** + MCP bearer in an Orchestrator Credential Asset.
+- **Permanent MCP endpoint** (named cloudflared tunnel / reserved domain / hosted deploy — no rotation, no per-run re-point) + MCP bearer in an Orchestrator Credential Asset.
 - **Deploy webhook + Slack `/pentest`** triggers.
 
 ## Security & scope
