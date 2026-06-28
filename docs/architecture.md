@@ -19,8 +19,9 @@ flowchart TD
 ```
 
 > Current deployed/green build runs `Start → Validate exploits → End` (the gate logic still executes inside the
-> agent and surfaces as `content = OPEN_TICKET`). The approval + Slack branch is built and being wired back in
-> (Action Center provisioning — see `PROJECT-PLAN.md` M8e).
+> agent and surfaces as `content = OPEN_TICKET`). The approval + Slack branch is **designed but not live**: the
+> approval app was built, but Maestro→AppTasks returned 404 (Action Center not provisioned for the debug identity),
+> so the node was removed from the green run — see `PROJECT-PLAN.md` M8e.
 
 ## Layer 2 — how a verdict is produced
 
@@ -57,7 +58,7 @@ sequenceDiagram
 | Bridge | **Remote MCP server** (`pentests/src/mcp/server.ts`) | Stateful Streamable HTTP, 7 tools, method-scoped auth (discovery open; `tools/call` gated by bearer **or** UiPath org-id). |
 | Execution | **TS + Playwright** (`pentests/src`) | Generates/replays PR-scoped exploit scenarios, asserts on exploitation signals, captures evidence (screenshots, traces). |
 | Evidence | **UiPath Test Manager** | Test set + execution per run; red/green = the exploit locker. |
-| Writes | Slack Block Kit (defect ticketing, e.g. Jira, on the v2 roadmap) | Gated behind human approval. |
+| Writes | Slack Block Kit (defect ticketing, e.g. Jira, on the v2 roadmap) | Designed to be gated behind human approval (Action Center; blocked — see `PROJECT-PLAN.md` M8e). |
 
 ## Exploit coverage (vs. `target-app/VULNS.md` ground truth)
 

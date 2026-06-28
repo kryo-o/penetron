@@ -1,5 +1,12 @@
 # PR → UiPath → Block (the UiPath-run gate)
 
+> **Status: design / build-plan — not yet wired.** This document specifies the pure-UiPath
+> round-trip (Maestro starts on a PR and calls back to set the GitHub commit status). The
+> verified shipping PR gate today is the GitHub-Action path in [`pr-flow.md`](pr-flow.md)
+> (which already fails the check on a proven exploit). The pieces below (External App,
+> `penetron-uipath.yml`, the Maestro→GitHub status callback, branch protection on
+> `penetron/uipath`) are the planned upgrade, not the current state.
+
 The pure-UiPath path: a PR triggers the **UiPath Maestro** process, the **Agent Builder agent (Claude)**
 runs the Penetron tools and verifies the change, and UiPath **reports the verdict back to GitHub** to block
 (or allow) the merge — then notifies Slack. GitHub only triggers and gates; **UiPath does the work.** *(Automated Jira ticketing: v2 roadmap.)*
