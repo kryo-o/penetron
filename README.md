@@ -163,7 +163,7 @@ npm run report                              # gate -> OPEN_TICKET
 ```
 
 On GitHub, `.github/workflows/penetron-pr.yml` runs this automatically on any PR touching
-`target-app/**` and posts the results as a PR comment. See [`docs/pr-flow.md`](docs/pr-flow.md).
+`target-app/**` or `pentests/**` and posts the results as a PR comment. See [`docs/pr-flow.md`](docs/pr-flow.md).
 
 Artifacts land in `pentests/evidence/`: `verdicts.json`, `exploitable-vulnerabilities.md`,
 `suggested-improvements.md`, `gate-summary.json`, XSS screenshots + Playwright traces,
