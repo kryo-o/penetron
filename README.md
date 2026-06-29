@@ -20,6 +20,17 @@ Built for the **UiPath AgentHack — Track 3** (agentic software testing with Ui
 
 ---
 
+## Agent Type
+
+**Agent Type: Low-code Agent.** Penetron's `Penetron Coordinator` is a **UiPath Agent Builder** Low-code Agent
+(Claude Sonnet 4.6, temperature 0) that calls Penetron's exploit engine over a **Remote MCP server** and
+interprets the structured verdicts. Penetron does **not** use a UiPath **Coded Agent** — the exploit engine is
+external TypeScript/Playwright, exposed to the agent via MCP rather than hosted as a UiPath coded agent.
+Separately, **Claude Code** (a coding agent) was used at *build* time — see
+[Coding agent](#coding-agent-the-bonus--claude-code) (the bonus).
+
+---
+
 ## What it does (the flow)
 
 ```
@@ -54,11 +65,8 @@ asserting on an **exploitation signal** (payload renders unescaped, auth bypasse
 
 ## Agents — UiPath classification
 
-**Penetron uses a Low-code Agent.** The `Penetron Coordinator` is built in **UiPath Agent Builder**
-(Claude Sonnet 4.6, temperature 0) and calls Penetron's engine over a Remote MCP server. Penetron does **not**
-use UiPath **Coded Agents** — the exploit engine is external TypeScript/Playwright exposed to the agent via MCP,
-not a UiPath-hosted coded agent. Separately, **Claude Code** (a coding agent) was used at *build* time — the
-bonus described next.
+See [Agent Type](#agent-type) above: Penetron is a **Low-code Agent** (UiPath Agent Builder), **not** a Coded
+Agent. The coding-agent bonus (Claude Code at build time) is described next.
 
 ## Coding agent (the bonus) — Claude Code
 
@@ -97,35 +105,50 @@ for the design.
 
 ---
 
-## Run it locally
+## Setup from scratch (for judges)
 
-Requires **Node 22+** (the target app uses the built-in `node:sqlite`; tested on Node 24).
+Penetron has **two paths**, both fully documented:
 
-**One-time setup** (from the repo root):
+- **Path A — Local pipeline** (Layers 1 + 2, exploitability gate, reports). Runs from a clean clone with
+  **no UiPath account and no credentials** — the self-contained path you can reproduce immediately. Steps below.
+- **Path B — Full UiPath stack** (Maestro → Agent Builder → Remote MCP → Test Manager): the complete governed
+  experience. It **requires** a UiPath tenant (Agent Builder + Test Manager), `cloudflared`, the `.env`
+  credentials, and **creating/updating the Remote MCP server** in Orchestrator each run. See
+  [Reproduce the full UiPath stack](#reproduce-the-full-uipath-stack-agent--mcp--test-manager).
+
+### Path A — local pipeline, step by step
+
+**0. Prerequisites** — **Node 22+** (the target app uses the built-in `node:sqlite`; tested on Node 24) and `git`.
+*(Path B additionally needs a UiPath tenant and `cloudflared` — see that section.)*
 
 ```bash
-cp .env.example .env   # the single env file lives at the repo root
-```
+# 1) Clone the repo
+git clone https://github.com/kryo-o/penetron.git
+cd penetron
 
-The **core Layer 1/2 flow runs with no credentials** (defaults are fine). You only need to fill
-`.env` for the **live** integrations: Test Manager sync (`UIPATH_TM_*`), the MCP/agent bridge
-(`PENETRON_MCP_*`), and Slack — see [Environment variables](#environment-variables).
+# 2) Create the env file (single file at the repo root)
+cp .env.example .env
+#    Path A needs NO credentials — the defaults are fine. The live integrations
+#    (Test Manager / MCP / Slack — all Path B) need values; see "Environment variables".
 
-```bash
-# 1) Target app (intentionally vulnerable) — http://localhost:4000
-#    This blocks — leave it running; use a second shell for the steps below.
+# 3) Start the target app (intentionally vulnerable) — http://localhost:4000
+#    This BLOCKS — leave it running; use a SECOND shell for steps 4–5.
 cd target-app && npm install && npm run build:client && npm start
 
-# 2) Prove the planted bugs fire (second shell)
+# 4) (verify) Prove the planted bugs fire — second shell, from the repo root
 cd target-app && npm run smoke                 # 8 passed, 0 failed
 
-# 3) Penetron Layer 2 + gate + reports  (target app from step 1 must be running)
+# 5) Run Penetron — second shell (target app from step 3 must be running)
 cd pentests && npm install && npm run pw:install
 npm run exploit      # 6/7 proven exploitable, 1 safe control resists
 npm run report       # exploitability gate -> OPEN_TICKET + two reports
-npm run pipeline     # exploit -> report -> Test Manager sync -> Slack notify
-                     # (tm:sync + slack need .env creds; they dry-run without them)
 ```
+
+That's the full local proof. To also run the integrations end-to-end use `npm run pipeline`
+(exploit → report → Test Manager sync → Slack notify) — fill `.env` first; `tm:sync` and `slack`
+dry-run without credentials. Artifacts land in `pentests/evidence/` (listed below). **For the full
+governed experience, continue to
+[Reproduce the full UiPath stack](#reproduce-the-full-uipath-stack-agent--mcp--test-manager) (Path B).**
 
 ### Run it as it runs on a PR (Layer 1 → Layer 2)
 
