@@ -1,5 +1,8 @@
 # Penetron — Agentic Penetration Testing, Governed by UiPath
 
+[![Penetron PR Security Gate](https://github.com/kryo-o/penetron/actions/workflows/penetron-pr.yml/badge.svg)](https://github.com/kryo-o/penetron/actions/workflows/penetron-pr.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 > **SAST tools drown teams in unproven findings. Penetron reports only what it has actually exploited.**
 > Static analysis proposes *candidates*; a dynamic agent **proves or discards** each one against the running app,
 > then UiPath orchestrates, governs, and records the evidence. *"Flagged 7 → proved 6, discarded 1."*
