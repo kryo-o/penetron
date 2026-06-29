@@ -96,20 +96,32 @@ for the design.
 
 ## Run it locally
 
-Requires Node 22+ (the target app uses the built-in `node:sqlite`; tested on Node 24).
+Requires **Node 22+** (the target app uses the built-in `node:sqlite`; tested on Node 24).
+
+**One-time setup** (from the repo root):
+
+```bash
+cp .env.example .env   # the single env file lives at the repo root
+```
+
+The **core Layer 1/2 flow runs with no credentials** (defaults are fine). You only need to fill
+`.env` for the **live** integrations: Test Manager sync (`UIPATH_TM_*`), the MCP/agent bridge
+(`PENETRON_MCP_*`), and Slack — see [Environment variables](#environment-variables).
 
 ```bash
 # 1) Target app (intentionally vulnerable) — http://localhost:4000
+#    This blocks — leave it running; use a second shell for the steps below.
 cd target-app && npm install && npm run build:client && npm start
 
-# 2) Prove the planted bugs fire (another shell)
+# 2) Prove the planted bugs fire (second shell)
 cd target-app && npm run smoke                 # 8 passed, 0 failed
 
-# 3) Penetron Layer 2 + gate + reports + integrations
+# 3) Penetron Layer 2 + gate + reports  (target app from step 1 must be running)
 cd pentests && npm install && npm run pw:install
 npm run exploit      # 6/7 proven exploitable, 1 safe control resists
 npm run report       # exploitability gate -> OPEN_TICKET + two reports
 npm run pipeline     # exploit -> report -> Test Manager sync -> Slack notify
+                     # (tm:sync + slack need .env creds; they dry-run without them)
 ```
 
 ### Run it as it runs on a PR (Layer 1 → Layer 2)
@@ -132,9 +144,11 @@ Artifacts land in `pentests/evidence/`: `verdicts.json`, `exploitable-vulnerabil
 
 ### Run the Remote MCP server (the UiPath bridge)
 
+Set `PENETRON_MCP_TOKEN`, `PENETRON_MCP_ALLOWED_ACCOUNT`, and the `UIPATH_TM_*` creds in your
+repo-root `.env` first (see [Environment variables](#environment-variables)), then:
+
 ```bash
 cd pentests
-cp .env.example .env       # set PENETRON_MCP_TOKEN, PENETRON_MCP_ALLOWED_ACCOUNT, TM creds
 npm run mcp:http           # stateful Streamable HTTP on :7337/mcp
 npm run mcp:smoke:http     # -> HTTP MCP smoke OK
 # expose with a tunnel for the cloud agent:  cloudflared tunnel --url http://localhost:7337 --protocol http2
@@ -154,8 +168,8 @@ MCP** server (through a tunnel) and writing red/green evidence to **Test Manager
 **Prerequisites**
 - A UiPath tenant with **Agent Builder** + **Test Manager** (this build used `staging.uipath.com`, org `hackathon26_879`).
 - [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) installed.
-- `pentests/.env` filled in: `PENETRON_MCP_TOKEN`, `PENETRON_MCP_ALLOWED_ACCOUNT` (your UiPath org id),
-  and the `UIPATH_TM_*` Test Manager S2S creds (see `.env.example`).
+- Repo-root `.env` filled in: `PENETRON_MCP_TOKEN`, `PENETRON_MCP_ALLOWED_ACCOUNT` (your UiPath org id),
+  and the `UIPATH_TM_*` Test Manager S2S creds (see [Environment variables](#environment-variables) / `.env.example`).
 
 **1. Bring the local stack up (one command)**
 ```bash
@@ -179,11 +193,35 @@ delete or recreate the MCP server:**
 - **Agent only:** open the `Penetron Coordinator` agent → **Debug**. It calls `run_exploits →
   generate_reports → get_gate → sync_test_manager`; a new execution appears in Test Manager
   (project **PEN**), 6 Failed / 1 Passed.
-- **Full process:** start the `Penetron Security Gate` Maestro process (same Solution).
+- **Full process:** run the `Penetron Security Gate` Maestro process — either **open a Pull Request**
+  (the live UiPath GitHub-connector trigger picks it up on its ~5-min poll) or start it manually from
+  Orchestrator → the Solution folder → Processes.
 
 **4. Verify**
 Test Manager → project **PEN** dashboard shows the execution; the MCP server log shows the
 `tools/call` traffic. See [`docs/evidence.md`](docs/evidence.md) for the reference run.
+
+---
+
+## Environment variables
+
+One `.env` at the **repo root** (`cp .env.example .env`). Core Layer 1/2 needs **none** of these; the
+groups below are only for the live integrations. Full template + comments in [`.env.example`](.env.example).
+
+| Variable | Required for | Default |
+|---|---|---|
+| `PENETRON_TARGET_URL` | core run (target app URL) | `http://localhost:4000` |
+| `PENETRON_ENV` · `PENETRON_MODE` | core run | `staging` · `replay` |
+| `UIPATH_IDENTITY_TOKEN_URL` | Test Manager sync | `…/identity_/connect/token` |
+| `UIPATH_TM_BASE_URL` · `UIPATH_TM_CLIENT_ID` · `UIPATH_TM_CLIENT_SECRET` · `UIPATH_TM_PROJECT_ID` | **live Test Manager evidence** (else `tm:sync` dry-runs) | — |
+| `PENETRON_MCP_TOKEN` | MCP HTTP transport (bearer) | — |
+| `PENETRON_MCP_ALLOWED_ACCOUNT` | **cloud agent path** (your UiPath org id; agenthub `accountid`) | — |
+| `PENETRON_MCP_TRANSPORT` · `PENETRON_MCP_PORT` | MCP server | `stdio` · `7337` |
+| `SLACK_WEBHOOK_URL` | Slack notify (optional; else dry-run) | — |
+| `JIRA_*` | Jira ticketing (v2 prototype; optional) | — |
+| `UIPATH_ORG_URL` · `UIPATH_ORCH_CLIENT_ID` · `UIPATH_ORCH_CLIENT_SECRET` · `UIPATH_FOLDER_ID` · `UIPATH_PROCESS_NAME` | **optional** — classic `npm run uipath:trigger` only (the live PR trigger needs none) | — |
+
+Secrets live in `.env` (git-ignored) locally and in **Orchestrator Credential Assets** in production — never hardcoded.
 
 ---
 
