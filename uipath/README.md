@@ -8,8 +8,8 @@ engine); UiPath provides orchestration (Maestro), the agentic coordinator
 
 ## Environment (verified 2026-06-24)
 - Host: **`staging.uipath.com`** (NOT `cloud.uipath.com` — that is a different deployment)
-- Org: **`hackathon26_879`** (OrganizationId `9d5888d3-00a1-4e5a-8702-78ace2906474`)
-- Tenant: **`DefaultTenant`** (`f036116e-4ef7-4ff7-a396-508c5f5626d4`)
+- Org: **your UiPath org** (substitute your own organization slug / id)
+- Tenant: **`DefaultTenant`** (substitute your own tenant)
 - CLI: `uip` v1.196 — always `uip login --authority https://staging.uipath.com`
 
 ## Chosen integration architecture (Remote MCP + tunnel)
