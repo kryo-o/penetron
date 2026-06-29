@@ -92,7 +92,7 @@ Evidence: [`docs/coding-agent-evidence/`](docs/coding-agent-evidence/).
 | Layer 2 exploit runner (TS + Playwright, replay + regenerate) | ✅ | `npm run exploit` (replay) / `npm run exploit:pr` (regenerate) → **6/7 proven, 1 discarded**, schema-valid |
 | Exploitability gate + two reports | ✅ | `npm run report` → `OPEN_TICKET`, priority `Highest` |
 | Slack integration | ✅ LIVE | Block Kit summary posts to the channel on a finding |
-| **Test Manager S2S sync** | ✅ LIVE | tenant `hackathon26_879`, project **PEN**; executions `f689d631…`, `fe3f6e8d…`, `47c525b7…` (6 Failed / 1 Passed each) |
+| **Test Manager S2S sync** | ✅ LIVE | our UiPath staging tenant, project **PEN**; executions `f689d631…`, `fe3f6e8d…`, `47c525b7…` (6 Failed / 1 Passed each) |
 | **Remote MCP server** (7 tools, stateful, dual-auth) | ✅ LIVE | `npm run mcp:http`; agent calls it through a cloudflared tunnel |
 | **Agent Builder coordinator → MCP** | ✅ LIVE | Debug run ~48s → real exploits → TM execution |
 | **Maestro process published + run green** | ✅ LIVE | solution v1.0.6; instance: Start → Validate exploits → End, Successful; `content = OPEN_TICKET` |
@@ -183,7 +183,7 @@ below (B0–B7) are exactly how this build was created, each linking the officia
 
 ### B0. Prerequisites
 - A UiPath tenant with **Agent Builder**, **Test Manager**, **Maestro**, and **Integration Service** (this build
-  used `staging.uipath.com`, org `hackathon26_879`).
+  used a `staging.uipath.com` tenant; substitute your own org/tenant).
 - [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) installed.
 - Repo-root `.env` filled in: `PENETRON_MCP_TOKEN`, `PENETRON_MCP_ALLOWED_ACCOUNT` (your UiPath org id), and the
   `UIPATH_TM_*` Test Manager S2S creds (see [Environment variables](#environment-variables) / `.env.example`).
