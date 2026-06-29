@@ -4,9 +4,9 @@ Machine-verifiable evidence that the spine ran end-to-end on UiPath Automation C
 locally and are **not** committed; this file captures the reproducible facts.)
 
 ## Tenant / project
-- Tenant: `hackathon26_879` / `DefaultTenant`
+- Tenant: `<your-org>` / `DefaultTenant`
 - Test Manager project: **Penetron** (prefix **PEN**)
-- Dashboard: `https://staging.uipath.com/hackathon26_879/DefaultTenant/testmanager_/PEN/dashboard`
+- Dashboard: `https://staging.uipath.com/<your-org>/DefaultTenant/testmanager_/PEN/dashboard`
 
 ## Maestro orchestrated run (2026-06-25/26)
 - Process: **Penetron Security Gate** (solution `Penetron` v1.0.6)

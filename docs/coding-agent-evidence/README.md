@@ -19,7 +19,7 @@ Claude Code built and deployed the project:
   generators, and the **Slack** integration (plus a Jira ticketing prototype parked for v2).
 - Built the **Remote MCP server** (`pentests/src/mcp/server.ts`, 7 tools, stateful Streamable HTTP, method-scoped
   auth) and the smoke tests.
-- Wired the **Test Manager S2S** sync (`syncVerdicts.ts`) — verified live against tenant `hackathon26_879`,
+- Wired the **Test Manager S2S** sync (`syncVerdicts.ts`) — verified live against our UiPath staging tenant,
   project PEN.
 - Drove the **UiPath Studio Web / Orchestrator GUI via Playwright MCP**: registered the Remote MCP server, bound
   the Agent Builder agent to its 7 tools, built the Action approval app, and **published + ran the Maestro

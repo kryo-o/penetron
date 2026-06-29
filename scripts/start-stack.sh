@@ -10,7 +10,6 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 LOG=/tmp
-ACCOUNT_ID=9d5888d3-00a1-4e5a-8702-78ace2906474   # staging org id (design-time auth path)
 
 echo "Stopping any previous stack..."
 pkill -f "server/index" 2>/dev/null || true
@@ -23,9 +22,10 @@ echo "1/3 target app -> :4000"
   nohup npm start > "$LOG/penetron-target.log" 2>&1 & )
 
 echo "2/3 MCP server -> :7337"
+# PENETRON_MCP_ALLOWED_ACCOUNT (your UiPath org id, the design-time auth path) is read
+# from the repo-root .env by the server's loadEnv — set it there, not here.
 ( cd "$ROOT/pentests" && \
   nohup env PENETRON_MCP_TRANSPORT=http PENETRON_MCP_PORT=7337 \
-    PENETRON_MCP_ALLOWED_ACCOUNT="$ACCOUNT_ID" \
     ./node_modules/.bin/tsx src/mcp/server.ts > "$LOG/penetron-mcp.log" 2>&1 & )
 
 echo "3/3 cloudflared tunnel"
