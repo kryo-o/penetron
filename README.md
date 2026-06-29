@@ -20,6 +20,17 @@ Built for the **UiPath AgentHack — Track 3** (agentic software testing with Ui
 
 ---
 
+## Agent Type
+
+**Agent Type: Low-code Agent.** Penetron's `Penetron Coordinator` is a **UiPath Agent Builder** Low-code Agent
+(Claude Sonnet 4.6, temperature 0) that calls Penetron's exploit engine over a **Remote MCP server** and
+interprets the structured verdicts. Penetron does **not** use a UiPath **Coded Agent** — the exploit engine is
+external TypeScript/Playwright, exposed to the agent via MCP rather than hosted as a UiPath coded agent.
+Separately, **Claude Code** (a coding agent) was used at *build* time — see
+[Coding agent](#coding-agent-the-bonus--claude-code) (the bonus).
+
+---
+
 ## What it does (the flow)
 
 ```
@@ -54,11 +65,8 @@ asserting on an **exploitation signal** (payload renders unescaped, auth bypasse
 
 ## Agents — UiPath classification
 
-**Penetron uses a Low-code Agent.** The `Penetron Coordinator` is built in **UiPath Agent Builder**
-(Claude Sonnet 4.6, temperature 0) and calls Penetron's engine over a Remote MCP server. Penetron does **not**
-use UiPath **Coded Agents** — the exploit engine is external TypeScript/Playwright exposed to the agent via MCP,
-not a UiPath-hosted coded agent. Separately, **Claude Code** (a coding agent) was used at *build* time — the
-bonus described next.
+See [Agent Type](#agent-type) above: Penetron is a **Low-code Agent** (UiPath Agent Builder), **not** a Coded
+Agent. The coding-agent bonus (Claude Code at build time) is described next.
 
 ## Coding agent (the bonus) — Claude Code
 
@@ -84,7 +92,7 @@ Evidence: [`docs/coding-agent-evidence/`](docs/coding-agent-evidence/).
 | Layer 2 exploit runner (TS + Playwright, replay + regenerate) | ✅ | `npm run exploit` (replay) / `npm run exploit:pr` (regenerate) → **6/7 proven, 1 discarded**, schema-valid |
 | Exploitability gate + two reports | ✅ | `npm run report` → `OPEN_TICKET`, priority `Highest` |
 | Slack integration | ✅ LIVE | Block Kit summary posts to the channel on a finding |
-| **Test Manager S2S sync** | ✅ LIVE | tenant `hackathon26_879`, project **PEN**; executions `f689d631…`, `fe3f6e8d…`, `47c525b7…` (6 Failed / 1 Passed each) |
+| **Test Manager S2S sync** | ✅ LIVE | our UiPath staging tenant, project **PEN**; executions `f689d631…`, `fe3f6e8d…`, `47c525b7…` (6 Failed / 1 Passed each) |
 | **Remote MCP server** (7 tools, stateful, dual-auth) | ✅ LIVE | `npm run mcp:http`; agent calls it through a cloudflared tunnel |
 | **Agent Builder coordinator → MCP** | ✅ LIVE | Debug run ~48s → real exploits → TM execution |
 | **Maestro process published + run green** | ✅ LIVE | solution v1.0.6; instance: Start → Validate exploits → End, Successful; `content = OPEN_TICKET` |
@@ -97,23 +105,51 @@ for the design.
 
 ---
 
-## Run it locally
+## Setup from scratch (for judges)
 
-Requires Node 22+ (the target app uses the built-in `node:sqlite`; tested on Node 24).
+Penetron has **two paths**, both fully documented:
+
+- **Path A — Local pipeline** (Layers 1 + 2, exploitability gate, reports). Runs from a clean clone with
+  **no UiPath account and no credentials** — the self-contained path you can reproduce immediately. Steps below.
+- **Path B — Full UiPath stack** (Maestro → Agent Builder → Remote MCP → Test Manager): the complete governed
+  experience, **built step by step** below. It **requires** a UiPath tenant (Agent Builder + Test Manager +
+  Maestro + Integration Service), `cloudflared`, the `.env` credentials, and **creating the Remote MCP server,
+  agent, BPMN, and GitHub trigger** in UiPath. See
+  [Path B — Full UiPath stack](#path-b--full-uipath-stack-maestro--agent--mcp--test-manager).
+
+## Path A — Local pipeline (no UiPath account, no credentials)
+
+**0. Prerequisites** — **Node 22+** (the target app uses the built-in `node:sqlite`; tested on Node 24) and `git`.
+*(Path B additionally needs a UiPath tenant and `cloudflared` — see that section.)*
 
 ```bash
-# 1) Target app (intentionally vulnerable) — http://localhost:4000
+# 1) Clone the repo
+git clone https://github.com/kryo-o/penetron.git
+cd penetron
+
+# 2) Create the env file (single file at the repo root)
+cp .env.example .env
+#    Path A needs NO credentials — the defaults are fine. The live integrations
+#    (Test Manager / MCP / Slack — all Path B) need values; see "Environment variables".
+
+# 3) Start the target app (intentionally vulnerable) — http://localhost:4000
+#    This BLOCKS — leave it running; use a SECOND shell for steps 4–5.
 cd target-app && npm install && npm run build:client && npm start
 
-# 2) Prove the planted bugs fire (another shell)
+# 4) (verify) Prove the planted bugs fire — second shell, from the repo root
 cd target-app && npm run smoke                 # 8 passed, 0 failed
 
-# 3) Penetron Layer 2 + gate + reports + integrations
+# 5) Run Penetron — second shell (target app from step 3 must be running)
 cd pentests && npm install && npm run pw:install
 npm run exploit      # 6/7 proven exploitable, 1 safe control resists
 npm run report       # exploitability gate -> OPEN_TICKET + two reports
-npm run pipeline     # exploit -> report -> Test Manager sync -> Slack notify
 ```
+
+That's the full local proof. To also run the integrations end-to-end use `npm run pipeline`
+(exploit → report → Test Manager sync → Slack notify) — fill `.env` first; `tm:sync` and `slack`
+dry-run without credentials. Artifacts land in `pentests/evidence/` (listed below). **For the full
+governed experience, continue to
+[Path B — Full UiPath stack](#path-b--full-uipath-stack-maestro--agent--mcp--test-manager).**
 
 ### Run it as it runs on a PR (Layer 1 → Layer 2)
 
@@ -127,66 +163,124 @@ npm run report                              # gate -> OPEN_TICKET
 ```
 
 On GitHub, `.github/workflows/penetron-pr.yml` runs this automatically on any PR touching
-`target-app/**` and posts the results as a PR comment. See [`docs/pr-flow.md`](docs/pr-flow.md).
+`target-app/**` or `pentests/**` and posts the results as a PR comment. See [`docs/pr-flow.md`](docs/pr-flow.md).
 
 Artifacts land in `pentests/evidence/`: `verdicts.json`, `exploitable-vulnerabilities.md`,
 `suggested-improvements.md`, `gate-summary.json`, XSS screenshots + Playwright traces,
 `slack-message.json`, `tm-sync-result.json`.
 
-### Run the Remote MCP server (the UiPath bridge)
+## Path B — Full UiPath stack (Maestro → Agent → MCP → Test Manager)
 
-```bash
-cd pentests
-cp .env.example .env       # set PENETRON_MCP_TOKEN, PENETRON_MCP_ALLOWED_ACCOUNT, TM creds
-npm run mcp:http           # stateful Streamable HTTP on :7337/mcp
-npm run mcp:smoke:http     # -> HTTP MCP smoke OK
-# expose with a tunnel for the cloud agent:  cloudflared tunnel --url http://localhost:7337 --protocol http2
-```
+The full governed experience: a UiPath **Maestro** process starts an **Agent Builder** agent that calls Penetron's
+engine over a **Remote MCP server** (through a tunnel) and writes red/green evidence to **Test Manager** — and a
+**GitHub Pull Request** auto-starts the whole thing via the **Integration Service** GitHub connector. The steps
+below (B0–B7) are exactly how this build was created, each linking the official UiPath doc and the matching repo spec.
 
-### Reproduce the full UiPath stack (agent → MCP → Test Manager)
+> **Proof-of-concept tunnel.** The `trycloudflare` quick tunnel is a zero-setup convenience for this hackathon
+> build — it lets the UiPath cloud agent reach a **locally-running** MCP server with no account or DNS. Quick-tunnel
+> URLs rotate, so you re-point UiPath each run (B6). **In the production version the MCP server runs at a permanent
+> URL** (a named cloudflared tunnel, a reserved domain, or a hosted endpoint), removing the re-point step.
 
-The cloud demo = a UiPath **Agent Builder** agent calling Penetron's engine over the **Remote
-MCP** server (through a tunnel) and writing red/green evidence to **Test Manager**.
-
-> **Proof-of-concept setup.** The `trycloudflare` quick tunnel below is a zero-setup convenience for this
-> hackathon build — it lets the UiPath cloud agent reach a **locally-running** MCP server with no account or
-> DNS. Because quick-tunnel URLs rotate, you re-point UiPath each run (step 2). **In the production version of
-> Penetron the MCP server runs at a permanent URL** (a named cloudflared tunnel, a reserved domain, or a
-> deployed/hosted endpoint), so the per-run re-point step goes away entirely.
-
-**Prerequisites**
-- A UiPath tenant with **Agent Builder** + **Test Manager** (this build used `staging.uipath.com`, org `hackathon26_879`).
+### B0. Prerequisites
+- A UiPath tenant with **Agent Builder**, **Test Manager**, **Maestro**, and **Integration Service** (this build
+  used a `staging.uipath.com` tenant; substitute your own org/tenant).
 - [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) installed.
-- `pentests/.env` filled in: `PENETRON_MCP_TOKEN`, `PENETRON_MCP_ALLOWED_ACCOUNT` (your UiPath org id),
-  and the `UIPATH_TM_*` Test Manager S2S creds (see `.env.example`).
+- Repo-root `.env` filled in: `PENETRON_MCP_TOKEN`, `PENETRON_MCP_ALLOWED_ACCOUNT` (your UiPath org id), and the
+  `UIPATH_TM_*` Test Manager S2S creds (see [Environment variables](#environment-variables) / `.env.example`).
 
-**1. Bring the local stack up (one command)**
+### B1. Start the local bridge (target app + MCP server + tunnel)
 ```bash
 ./scripts/start-stack.sh    # target app (:4000) + MCP server (:7337) + cloudflared tunnel
 ```
-It prints a **public MCP URL** like `https://<random>.trycloudflare.com/mcp`.
+It prints a **public MCP URL** like `https://<random>.trycloudflare.com/mcp` — you paste this into UiPath in B2.
+Manual alternative (two shells): `cd pentests && npm run mcp:http` (stateful Streamable HTTP on `:7337/mcp`;
+`npm run mcp:smoke:http` to verify), then `cloudflared tunnel --url http://localhost:7337 --protocol http2`.
 
-**2. Point UiPath at the tunnel ⚠️ — do this every run**
-`trycloudflare` quick-tunnel URLs **rotate on every start**, so after each `start-stack.sh` the
-agent will hit a stale URL (502) until you re-point it. **You only need to update the URL — do *not*
-delete or recreate the MCP server:**
-- UiPath **Orchestrator → MCP Servers → `Penetron` → Edit** → set **Remote URL** = the printed `…/mcp`
-  (keep the `Authorization` bearer header) → **Update / Save**. *(Just save — you don't need the
-  "Connect to MCP" button; the 7 tools re-discover automatically.)*
+### B2. Register the Remote MCP Server in Orchestrator
+- **Orchestrator → your Solution folder → MCP Servers → Add.**
+- **Type = Remote**, **Name** `Penetron`, **Remote URL = `<tunnel>/mcp`** (⚠ must end in `/mcp` — a bare host 404s),
+  **Headers** `{"Authorization":"Bearer <PENETRON_MCP_TOKEN>"}` (header values containing `token`/`secret` auto-mask).
+- **Save** → the **7 tools auto-discover**.
+- Gotcha: don't delete + recreate the server (it spawns duplicate slugs like `Penetron_1` and breaks the agent's
+  tool binding) — to change the URL later, Edit → Update (see B6).
+- Docs: [About MCP Servers](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-mcp-servers) ·
+  [Managing MCP Servers](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/managing-mcp-servers).
+  Repo spec: [`uipath/mcp/register-remote-mcp.md`](uipath/mcp/register-remote-mcp.md).
+
+### B3. Create the Penetron Coordinator agent + bind the MCP tools
+- **Agent Builder → new agent** named `Penetron Coordinator`; model **Claude Sonnet 4.6**, **temperature 0**.
+- Paste the **system prompt** and **output contract** from
+  [`uipath/agents/penetron-coordinator.agent.md`](uipath/agents/penetron-coordinator.agent.md).
+- **Add tool → MCP Server → `Penetron` → select the tools** the agent may call: `run_exploits`,
+  `generate_reports`, `get_gate`, `sync_test_manager` (`run_full_pipeline` optional). You **must** explicitly
+  select them — an empty list shows "No available tools" at runtime.
+- **Debug** (~48s) → real exploits → a new Test Manager execution (project **PEN**), 6 Failed / 1 Passed.
+- Docs: [Building an agent](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/building-an-agent-agent-builder) ·
+  [Add MCP servers as tools](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/mcp-servers).
+
+### B4. Build the Maestro BPMN process (Penetron Security Gate)
+In **Maestro**, in the **same Solution** as the agent:
+- **Start event → Agent task** ("Validate exploits", *Start and wait for agent* = **Penetron Coordinator**; bind
+  the agent output to a process variable `content`).
+- **→ Exclusive gateway** on `content`, condition `vars.content.includes("OPEN_TICKET")` → branch to **End** events.
+- **Publish** the solution and run an instance — it goes green (`content = OPEN_TICKET`, 6 exploited / 1 discarded).
+- Gotcha: make sure the **Start → task sequence flow is actually connected** (a detached flow runs only the Start
+  event and finishes in ~0.5s). The **Action Center** human-approval node is **designed but skipped** on this
+  tenant (Maestro→AppTasks 404 — see [`PROJECT-PLAN.md`](PROJECT-PLAN.md) M8e and the
+  [Live status](#live-status-verified) table).
+- Docs: [Implementing a simple process](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/how-to-simple-process) ·
+  [Gateways & flow logic](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/gateways-flow-logic).
+  Repo spec: [`uipath/maestro/penetron-process.md`](uipath/maestro/penetron-process.md).
+
+### B5. Wire the GitHub PR trigger (Integration Service, OAuth)
+- **Integration Service → Connections → GitHub → add connection** via **OAuth 2.0 Authorization Code** (sign in to
+  GitHub and authorize the UiPath app).
+- In the Maestro process, make the **Start event a Message Start Event** bound to the GitHub connector event
+  **"Pull Request Created"** (polling, ~5 min) on `kryo-o/penetron`. Opening a PR now auto-starts the gate.
+- Gotcha: the trigger only catches PRs created **after** the solution is (re)published — open a **fresh** PR to
+  test. The run still bridges through the local MCP stack, so keep B1 up and the Remote URL current (B6).
+- Today the merge-blocking check is the GitHub Action (`penetron`); the **UiPath→GitHub commit-status callback**
+  (so the UiPath verdict itself blocks the merge) is on the [v2 roadmap](#roadmap-v2).
+- Docs: [About the GitHub connector](https://docs.uipath.com/integration-service/automation-cloud/latest/user-guide/uipath-microsoft-github) ·
+  [GitHub authentication](https://docs.uipath.com/integration-service/automation-cloud/latest/user-guide/uipath-microsoft-github-authentication).
+  Repo spec: [`docs/pr-uipath-flow.md`](docs/pr-uipath-flow.md).
+
+### B6. Re-point the tunnel each run ⚠️ (trycloudflare rotates)
+`trycloudflare` URLs **rotate on every start**, so after each `start-stack.sh` the agent hits a stale URL (502)
+until you re-point it. **Just update the URL — do *not* delete/recreate the server:**
+- **Orchestrator → MCP Servers → `Penetron` → Edit** → set **Remote URL** = the new `…/mcp` (keep the bearer
+  header) → **Update / Save**. *(Just save — you don't need the "Connect to MCP" button; the 7 tools re-discover.)*
 - In the agent, **Refresh tools** so it picks up the new URL.
 
-> First-time registration (creating the MCP Server entry + binding the agent) is in
-> [`uipath/mcp/register-remote-mcp.md`](uipath/mcp/register-remote-mcp.md).
+### B7. Run it & verify
+- **Agent only:** open `Penetron Coordinator` → **Debug** (calls `run_exploits → generate_reports → get_gate →
+  sync_test_manager`); a new execution appears in Test Manager (project **PEN**), 6 Failed / 1 Passed.
+- **Full process:** run `Penetron Security Gate` — either **open a Pull Request** (the live GitHub-connector trigger
+  picks it up on its ~5-min poll) or start it manually from Orchestrator → the Solution folder → Processes.
+- **Verify:** Test Manager → project **PEN** dashboard shows the new execution; see
+  [`docs/evidence.md`](docs/evidence.md) for the reference run.
 
-**3. Run it**
-- **Agent only:** open the `Penetron Coordinator` agent → **Debug**. It calls `run_exploits →
-  generate_reports → get_gate → sync_test_manager`; a new execution appears in Test Manager
-  (project **PEN**), 6 Failed / 1 Passed.
-- **Full process:** start the `Penetron Security Gate` Maestro process (same Solution).
+---
 
-**4. Verify**
-Test Manager → project **PEN** dashboard shows the execution; the MCP server log shows the
-`tools/call` traffic. See [`docs/evidence.md`](docs/evidence.md) for the reference run.
+## Environment variables
+
+One `.env` at the **repo root** (`cp .env.example .env`). Core Layer 1/2 needs **none** of these; the
+groups below are only for the live integrations. Full template + comments in [`.env.example`](.env.example).
+
+| Variable | Required for | Default |
+|---|---|---|
+| `PENETRON_TARGET_URL` | core run (target app URL) | `http://localhost:4000` |
+| `PENETRON_ENV` · `PENETRON_MODE` | core run | `staging` · `replay` |
+| `UIPATH_IDENTITY_TOKEN_URL` | Test Manager sync | `…/identity_/connect/token` |
+| `UIPATH_TM_BASE_URL` · `UIPATH_TM_CLIENT_ID` · `UIPATH_TM_CLIENT_SECRET` · `UIPATH_TM_PROJECT_ID` | **live Test Manager evidence** (else `tm:sync` dry-runs) | — |
+| `PENETRON_MCP_TOKEN` | MCP HTTP transport (bearer) | — |
+| `PENETRON_MCP_ALLOWED_ACCOUNT` | **cloud agent path** (your UiPath org id; agenthub `accountid`) | — |
+| `PENETRON_MCP_TRANSPORT` · `PENETRON_MCP_PORT` | MCP server | `stdio` · `7337` |
+| `SLACK_WEBHOOK_URL` | Slack notify (optional; else dry-run) | — |
+| `JIRA_*` | Jira ticketing (v2 prototype; optional) | — |
+| `UIPATH_ORG_URL` · `UIPATH_ORCH_CLIENT_ID` · `UIPATH_ORCH_CLIENT_SECRET` · `UIPATH_FOLDER_ID` · `UIPATH_PROCESS_NAME` | **optional** — classic `npm run uipath:trigger` only (the live PR trigger needs none) | — |
+
+Secrets live in `.env` (git-ignored) locally and in **Orchestrator Credential Assets** in production — never hardcoded.
 
 ---
 

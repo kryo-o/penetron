@@ -32,7 +32,7 @@ Headline result on the demo PR: **Flagged 7 → proved 6, discarded 1.**
 - **UiPath components:**
   - **Agent Builder** — the "Penetron Coordinator" agent (Claude Sonnet 4.6, autonomous, temp 0) that runs the verification.
   - **Remote MCP Server** — a stateful Streamable-HTTP MCP server (7 tools) bridging the cloud agent to the engine; method-scoped auth (discovery open, execution gated by bearer **or** UiPath org id).
-  - **Test Manager / Test Cloud** — S2S sync of verdicts to a test set + execution (live on tenant `hackathon26_879`, project PEN).
+  - **Test Manager / Test Cloud** — S2S sync of verdicts to a test set + execution (live on our UiPath staging tenant, project PEN).
   - **Maestro** — a BPMN process orchestrating Start → agent verification → exploitability gate → end, with the audit trail.
   - **Orchestrator** — solution packaging/deploy, folders, External Application (client-credentials) identity.
 - **Agent type (UiPath):** a **Low-code Agent** (Agent Builder "Penetron Coordinator"). Penetron does **not** use UiPath **Coded Agents** — the exploit engine is external TypeScript reached via Remote MCP.
