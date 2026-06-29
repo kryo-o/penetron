@@ -93,7 +93,7 @@ PR / deploy ─► UiPath Maestro (orchestration · governance · audit)
 ## Slide 8 — The evidence: Test Manager
 ### Red = proven exploit · Green = safe control resisted
 - Each run creates a **test set + execution** in UiPath Test Manager.
-- Latest live run (tenant `hackathon26_879`, project **PEN**): **6 Failed / 1 Passed.**
+- Latest live run (our UiPath staging tenant, project **PEN**): **6 Failed / 1 Passed.**
 - Screenshots + Playwright traces attached → the **red/green exploit locker**.
 
 *[Insert screenshot: PEN dashboard execution 6 fail / 1 pass]*
