@@ -64,6 +64,19 @@ app.get('/api/search', (req, res) => {
   }
 });
 
+// ===== Product quick-find (demo feature) =====
+// VULN-SQLI-3 (planted for demo): req.query.q interpolated into SQL -> UNION injection. CWE-89.
+app.get('/api/products/find', (req, res) => {
+  const q = req.query.q || '';
+  const sql = `SELECT id, name, category, price FROM products WHERE name = '${q}'`;
+  try {
+    const rows = db.prepare(sql).all();
+    res.json({ query: q, results: rows });
+  } catch (err) {
+    res.status(500).json({ error: 'query failed', detail: err.message, sql });
+  }
+});
+
 // ===== Reflected XSS (server-rendered) =====
 // VULN-XSS-1: query param reflected unescaped into HTML. CWE-79.
 app.get('/welcome', (req, res) => {
