@@ -64,6 +64,17 @@ app.get('/api/search', (req, res) => {
   }
 });
 
+// ===== Product quick-find (demo feature) =====
+app.get('/api/products/find', (req, res) => {
+  const q = req.query.q || '';
+  try {
+    const rows = db.prepare('SELECT id, name, category, price FROM products WHERE name = ?').all(q);
+    res.json({ query: q, results: rows });
+  } catch (err) {
+    res.status(500).json({ error: 'query failed', detail: err.message });
+  }
+});
+
 // ===== Reflected XSS (server-rendered) =====
 // VULN-XSS-1: query param reflected unescaped into HTML. CWE-79.
 app.get('/welcome', (req, res) => {
